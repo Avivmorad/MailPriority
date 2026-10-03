@@ -41,7 +41,7 @@ describe("MailRefineFilters", () => {
     expect(screen.getByRole("group", { name: "Priority" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Medium priority" })).toHaveTextContent("Medium");
     expect(screen.getByRole("group", { name: "Signal" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Urgency Level: Medium" }).className).not.toContain(
+    expect(screen.getByRole("link", { name: "Urgency: Medium" }).className).not.toContain(
       "w-[7.25rem]",
     );
   });

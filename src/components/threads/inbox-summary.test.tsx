@@ -42,9 +42,7 @@ describe("InboxSummary", () => {
     );
 
     expandCategory(/Travel & Transport/);
-    expect(screen.getByText("Urgency Level: None").closest("article")).toHaveClass(
-      "border-l-gray-400",
-    );
+    expect(screen.getByText("Urgency: None").closest("article")).toHaveClass("border-l-gray-400");
     expect(screen.getByText("The airline moved the departure.")).toBeInTheDocument();
     expect(screen.queryByText(/useful update, not an action/i)).not.toBeInTheDocument();
     const sender = screen.getByText("El Al");

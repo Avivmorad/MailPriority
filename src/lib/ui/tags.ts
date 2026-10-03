@@ -152,7 +152,7 @@ export function tagLabel(kind: TagKind, value: string): string {
     return CATEGORY_LABELS[normalizeCategory(value)];
   }
   return kind === "urgency"
-    ? `Urgency Level: ${humanizeToken(urgencyLevel(value))}`
+    ? `Urgency: ${humanizeToken(urgencyLevel(value))}`
     : humanizeToken(value);
 }
 
