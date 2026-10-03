@@ -48,6 +48,14 @@ describe("TriagePreferencesForm", () => {
     expect(screen.getByText("Domain")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Remove vip@example.com" })).toBeInTheDocument();
     expect(screen.queryByPlaceholderText(/one email per line/i)).not.toBeInTheDocument();
+    const senderRow = screen.getByTestId("triage-sender-editors");
+    expect(senderRow.className).toContain("repeat(auto-fit,minmax(min(100%,18rem),1fr))");
+    const vipInput = screen.getByLabelText("VIP senders");
+    const ignoreInput = screen.getByLabelText("Ignore senders & domains");
+    expect(vipInput).not.toBe(ignoreInput);
+    expect(senderRow).toContainElement(vipInput);
+    expect(senderRow).toContainElement(ignoreInput);
+    expect(vipInput.closest("div.block")).not.toBe(ignoreInput.closest("div.block"));
     expect(screen.getByRole("button", { name: "Update Now" })).toBeEnabled();
     expect(
       screen.getByRole("textbox", { name: /Custom triage instructions/i }),
