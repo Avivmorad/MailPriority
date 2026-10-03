@@ -29,8 +29,12 @@ import {
 import { DISPATCH_LEASE_SECONDS } from "@/lib/scans/dispatch-budget";
 import { scanUserMessage } from "@/lib/scans/errors";
 import { BEST_EFFORT_DAILY_NOTE } from "@/lib/settings/schedule-copy";
-import { formatDateTime } from "@/lib/ui/format";
+import { formatDateTime, formatScanWindow } from "@/lib/ui/format";
 import { labelForScanStatus } from "@/lib/ui/labels";
+
+function formatCount(value: number | null): string {
+  return value === null ? "—" : String(value);
+}
 
 const POLL_MISS_LIMIT = 3;
 /** Wait this long after a poll settles before the next one. One request at a time. */
@@ -63,7 +67,7 @@ function readFailure(payload: unknown): { error?: string; message?: string } {
 
 async function fetchLatestScan(signal: AbortSignal): Promise<LatestScanResult> {
   try {
-    const response = await fetch("/api/scans", { cache: "no-store", signal });
+    const response = await fetch("/api/scans?progress=1", { cache: "no-store", signal });
     if (!response.ok) {
       return { kind: "http", status: response.status };
     }
@@ -168,6 +172,8 @@ export function InitialScanCard({
   lastRunStatus,
   messagesProcessed,
   completeHref = "/dashboard?scan=done",
+  breakdown = null,
+  returnTo = "/dashboard",
 }: {
   connected: boolean;
   incremental: boolean;
@@ -177,6 +183,14 @@ export function InitialScanCard({
   lastRunStatus?: string | null;
   messagesProcessed?: number | null;
   completeHref?: string;
+  breakdown?: {
+    actions: number | null;
+    pending: number | null;
+    forYou: number | null;
+    ignored: number | null;
+    important: number | null;
+  } | null;
+  returnTo?: string;
 }) {
   const router = useRouter();
   const resumeId = latestScan?.status === "RUNNING" ? latestScan.id : null;
@@ -190,6 +204,7 @@ export function InitialScanCard({
   const [error, setError] = useState(false);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const progressRef = useRef(progress);
+  const watchIdRef = useRef(watchId);
   const lookbackRef = useRef(lookbackDays);
   const routerRef = useRef(router);
   const generationRef = useRef(0);
@@ -199,6 +214,53 @@ export function InitialScanCard({
   const cancelInFlightRef = useRef(false);
   /** One automatic resume per scan id. A failed resume must not start another by itself. */
   const resumedScanIds = useRef(new Set<string>());
+  /** A confirmed cancel must not be revived by a stale RUNNING prop in this session. */
+  const suppressedScanIds = useRef(new Set<string>());
+
+  function adoptRunningScan(scan: ScanRunSnapshot) {
+    if (scan.status !== "RUNNING" || suppressedScanIds.current.has(scan.id)) {
+      return;
+    }
+    const watching = watchIdRef.current;
+    if (watching && watching !== "pending" && watching !== scan.id) {
+      return;
+    }
+    if (progressRef.current?.id === "pending") {
+      return;
+    }
+    if (watching !== scan.id) {
+      setMessage(null);
+      setError(false);
+      setErrorCode(null);
+    }
+    setWatchId(scan.id);
+    setBusy(true);
+    setProgress((current) => {
+      if (current?.id === "pending") {
+        return current;
+      }
+      if (
+        current?.id === scan.id &&
+        current.status === scan.status &&
+        (current.threads_checked ?? 0) === (scan.threads_checked ?? 0) &&
+        (current.threads_discovered ?? 0) === (scan.threads_discovered ?? 0)
+      ) {
+        return current;
+      }
+      // A live poll can be ahead of the server snapshot this page mounted with.
+      if (current?.id === scan.id && (current.threads_checked ?? 0) > (scan.threads_checked ?? 0)) {
+        return current;
+      }
+      return scan;
+    });
+  }
+
+  const adoptRunningScanRef = useRef(adoptRunningScan);
+
+  useEffect(() => {
+    watchIdRef.current = watchId;
+    adoptRunningScanRef.current = adoptRunningScan;
+  });
 
   useEffect(() => {
     progressRef.current = progress;
@@ -211,6 +273,38 @@ export function InitialScanCard({
   useEffect(() => {
     routerRef.current = router;
   }, [router]);
+
+  // A scan started on Settings can be missing from this page's first payload.
+  // Read the shared progress endpoint once so the tab joins that run.
+  useEffect(() => {
+    const generation = generationRef.current;
+    if (watchIdRef.current) {
+      return;
+    }
+    const stop = new AbortController();
+    let active = true;
+    void (async () => {
+      const result = await fetchLatestScan(stop.signal);
+      if (!active || generation !== generationRef.current || watchIdRef.current) {
+        return;
+      }
+      if (result.kind === "scan") {
+        adoptRunningScanRef.current(result.scan);
+      }
+    })();
+    return () => {
+      active = false;
+      stop.abort();
+    };
+  }, []);
+
+  // Server props can arrive after mount (client cache, then a fresh payload)
+  // without resetting useState. Follow that same RUNNING scan.
+  useEffect(() => {
+    if (latestScan) {
+      adoptRunningScanRef.current(latestScan);
+    }
+  }, [latestScan]);
 
   // Abort start/cancel requests on unmount even when watchId is still null.
   useEffect(() => {
@@ -345,7 +439,15 @@ export function InitialScanCard({
       misses = 0;
       if (scan.status === "RUNNING") {
         setWatchId(scan.id);
-        setProgress(scan);
+        setProgress((current) => {
+          if (
+            current?.id === scan.id &&
+            (current.threads_checked ?? 0) > (scan.threads_checked ?? 0)
+          ) {
+            return current;
+          }
+          return scan;
+        });
         if (isStaleRunning(scan, Date.now())) {
           void resumeStalled(scan.id);
         }
@@ -461,6 +563,7 @@ export function InitialScanCard({
         setMessage(scanUserMessage(result.failure.error, result.failure.message));
         return;
       }
+      suppressedScanIds.current.add(target);
       setBusy(false);
       setProgress(null);
       setWatchId(null);
@@ -531,8 +634,31 @@ export function InitialScanCard({
 
   const bar = progress
     ? snapshotProgress(progress)
-    : { threadsDiscovered: 0, threadsChecked: 0, status: null, errorCode: null };
+    : {
+        threadsDiscovered: latestScan?.threads_discovered ?? 0,
+        threadsChecked: latestScan?.threads_checked ?? 0,
+        status: lastRunStatus ?? latestScan?.status ?? null,
+        errorCode: latestScan?.error_code ?? null,
+      };
   const statusLabel = lastRunStatus ? labelForScanStatus(lastRunStatus) : null;
+  const updatedAt = progress?.updated_at ?? lastRunAt ?? null;
+  const factItems = [
+    { label: "Scanning", value: formatScanWindow(lookbackDays) },
+    {
+      label: "Conversations",
+      value: `${bar.threadsChecked} of ${bar.threadsDiscovered}`,
+    },
+    {
+      label: "Emails scanned",
+      value: typeof messagesProcessed === "number" ? String(messagesProcessed) : "—",
+    },
+    { label: "Actions", value: breakdown ? formatCount(breakdown.actions) : null },
+    { label: "Pending", value: breakdown ? formatCount(breakdown.pending) : null },
+    { label: "For You", value: breakdown ? formatCount(breakdown.forYou) : null },
+    { label: "Ignored", value: breakdown ? formatCount(breakdown.ignored) : null },
+    { label: "Important", value: breakdown ? formatCount(breakdown.important) : null },
+    { label: "Updated", value: formatDateTime(updatedAt) },
+  ].filter((item): item is { label: string; value: string } => item.value !== null);
 
   return (
     <Card id="scan">
@@ -544,15 +670,30 @@ export function InitialScanCard({
             : "Choose how far back to read. Unchanged threads are skipped."}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {busy ? (
+      <CardContent className="space-y-5">
+        <div className="flex min-w-0 flex-col gap-6">
           <ScanProgressBar
             threadsChecked={bar.threadsChecked}
             threadsDiscovered={bar.threadsDiscovered}
             status={bar.status}
             errorCode={bar.errorCode}
           />
-        ) : null}
+          <dl
+            data-testid="scan-progress-stats"
+            className="grid min-w-0 grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-x-5 gap-y-3"
+          >
+            {factItems.map((item) => (
+              <div key={item.label} className="min-w-0">
+                <dt className="text-muted-foreground text-xs leading-snug whitespace-nowrap">
+                  {item.label}
+                </dt>
+                <dd className="mt-0.5 text-sm font-medium break-normal tabular-nums">
+                  {item.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
         <div className="flex flex-wrap items-end gap-3">
           <label className="block min-w-40 flex-1 text-sm">
             <span className="text-muted-foreground mb-1.5 block" id="scan-lookback-label">
@@ -577,6 +718,7 @@ export function InitialScanCard({
           <Button
             type="button"
             size="lg"
+            className="h-11 px-5"
             disabled={!connected || busy}
             aria-busy={busy}
             onClick={() => void runScan()}
@@ -604,7 +746,7 @@ export function InitialScanCard({
             {error && errorCode === "reauth_required" ? (
               <>
                 {" "}
-                <a className="underline" href="/api/gmail/connect?returnTo=/dashboard">
+                <a className="underline" href={`/api/gmail/connect?returnTo=${returnTo}`}>
                   Reconnect Gmail
                 </a>
               </>

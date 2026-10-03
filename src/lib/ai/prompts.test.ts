@@ -71,6 +71,10 @@ describe("buildTriageUserPrompt", () => {
 describe("TRIAGE_SYSTEM_PROMPT", () => {
   it("asks for English user-facing titles and summaries", () => {
     expect(TRIAGE_SYSTEM_PROMPT).toContain("Write all user-facing text fields in English");
+    expect(TRIAGE_SYSTEM_PROMPT).toContain("action_summary is the Do line");
+    expect(TRIAGE_SYSTEM_PROMPT).toContain(
+      "Write those fields as English sentences even when the email subject or body is in another language",
+    );
     expect(TRIAGE_SYSTEM_PROMPT).not.toContain("in Hebrew");
   });
 

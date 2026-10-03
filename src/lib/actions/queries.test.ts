@@ -13,6 +13,7 @@ const THREAD = {
   short_display_title: "University registration",
   action_summary: "Choose courses and submit registration.",
   action_reason: "Registration closes after the deadline.",
+  importance_reason: "Enrollment window is open.",
   confidence: 0.91,
 };
 
@@ -36,6 +37,7 @@ describe("mapActionListItem", () => {
 
     expect(item.actionSummary).toBe("Choose courses and submit registration.");
     expect(item.actionReason).toBe("Registration closes after the deadline.");
+    expect(item.importanceReason).toBe("Enrollment window is open.");
     expect(item.title).toBe("University registration");
     expect(item.sender).toBe("Registrar");
     expect(item.gmailUrl).toContain("gmail-1");

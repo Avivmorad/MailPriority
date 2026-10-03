@@ -14,6 +14,7 @@ const LABELS: Record<(typeof FEEDBACK_KINDS)[number], string> = {
   no_action: "No action — For You",
   waiting: "Pending",
   not_waiting: "Not pending",
+  ignore: "Ignored",
 };
 
 export function ThreadFeedback({ threadId }: { threadId: string }) {

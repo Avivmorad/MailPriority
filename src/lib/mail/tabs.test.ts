@@ -5,6 +5,7 @@ import {
   isMailTab,
   mailTabEmptyCopy,
   mailTabFromLegacyActionTab,
+  mailViewPath,
   parseMailTab,
 } from "@/lib/mail/tabs";
 
@@ -29,6 +30,22 @@ describe("mail tabs", () => {
     expect(mailTabFromLegacyActionTab("OPEN")).toBe("open");
     expect(mailTabFromLegacyActionTab("SNOOZED")).toBe("snoozed");
     expect(mailTabFromLegacyActionTab("summary")).toBe("summary");
+  });
+
+  it("keeps the tab when a label filter is added", () => {
+    expect(mailViewPath({ tab: "waiting", category: "finance" })).toBe(
+      "/mail?tab=waiting&category=finance",
+    );
+    expect(mailViewPath({ tab: "open", uncertain: true })).toBe("/mail?tab=open&uncertain=1");
+    expect(mailViewPath({ tab: "summary" })).toBe("/mail?tab=summary");
+    expect(
+      mailViewPath({
+        tab: "open",
+        category: "finance",
+        priority: "medium",
+        signal: "high",
+      }),
+    ).toBe("/mail?tab=open&category=finance&priority=medium&signal=high");
   });
 
   it("uses empty-state copy for Actions and Pending", () => {

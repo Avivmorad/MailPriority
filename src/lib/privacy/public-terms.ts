@@ -2,12 +2,12 @@ export const TERMS_SECTIONS = [
   {
     id: "the-service",
     title: "The service",
-    body: "MailPriority is an inbox triage product. After you create an account and connect Gmail, MailPriority can scan a window of mail you choose, classify threads, apply MailPilot/ labels, and show actions, pending items, and an in-app digest. MailPriority does not send, delete, or archive mail for you.",
+    body: "MailPriority is an inbox triage product. After you create an account and connect Gmail, MailPriority can scan a window of mail you choose, classify threads, apply Gmail labels under the MailPriority/ prefix, and show actions, pending items, and the History screen. MailPriority does not send, delete, or archive mail for you.",
   },
   {
     id: "your-account",
     title: "Your account",
-    body: "You must only connect a Gmail account you are allowed to access. You are responsible for keeping your MailPriority login safe and for how you use the summaries and labels MailPriority creates. You can disconnect Gmail, delete stored analysis data, or delete your MailPriority account in Settings. MailPriority does not publish a support email address.",
+    body: "You must only connect a Gmail account you are allowed to access. You are responsible for keeping your MailPriority login safe and for how you use the summaries and labels MailPriority creates. You can disconnect Gmail (which removes stored analysis from MailPriority), delete stored analysis data while staying connected, or delete your MailPriority account in Settings. MailPriority does not publish a support email address.",
   },
   {
     id: "limitations",

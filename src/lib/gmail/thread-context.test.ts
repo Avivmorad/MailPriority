@@ -85,4 +85,41 @@ describe("buildThreadContext", () => {
     expect(context.messages).toHaveLength(3);
     expect(context.messages[0]?.gmailMessageId).toBe("5");
   });
+
+  it("keeps the latest message when older messages exceed the thread cap", () => {
+    const limits = {
+      MAX_THREAD_MESSAGES: 6,
+      MAX_MESSAGE_CHARS: 4000,
+      MAX_THREAD_CHARS: 900,
+      AI_MAX_CONCURRENCY: 1,
+      GMAIL_QUOTA_UNITS_PER_MINUTE: 12000,
+    };
+    const context = buildThreadContext(
+      [
+        message({
+          gmailMessageId: "old",
+          internalDate: "1",
+          from: "ada@example.com",
+          to: "me@example.com",
+          subject: "Automatic reply",
+          plainText: `I am currently out of the office. ${"prior history ".repeat(400)}`,
+        }),
+        message({
+          gmailMessageId: "new",
+          internalDate: "2",
+          from: "ada@example.com",
+          to: "me@example.com",
+          subject: "Invoice",
+          plainText: "Please approve the invoice today.",
+        }),
+      ],
+      ["me@example.com"],
+      limits,
+    );
+
+    expect(context.messages).toHaveLength(2);
+    expect(context.promptText).toContain("Please approve the invoice today.");
+    expect(context.promptText).not.toContain("out of the office");
+    expect(context.promptText.length).toBeLessThanOrEqual(limits.MAX_THREAD_CHARS);
+  });
 });

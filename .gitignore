@@ -61,3 +61,4 @@ DELETE-AFTER-vercel-env.*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.playwright-mcp/

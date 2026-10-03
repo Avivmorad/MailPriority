@@ -1,3 +1,6 @@
+import { cache } from "react";
+
+import type { ActionListItem } from "@/lib/actions/action-list-item";
 import { isNonTaskNotice } from "@/lib/ai/notices";
 import { compareOpenActions } from "@/lib/actions/sort";
 import type { ActionStatus } from "@/lib/actions/reconcile-action";
@@ -5,28 +8,7 @@ import { gmailThreadUrl } from "@/lib/gmail/deep-link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { displayActionTitle, usableDisplayText } from "@/lib/ui/display-text";
 
-export interface ActionListItem {
-  id: string;
-  threadId: string;
-  status: ActionStatus;
-  title: string;
-  description: string | null;
-  actionSummary: string | null;
-  actionReason: string | null;
-  waitingFor: string | null;
-  snoozedUntil: string | null;
-  deadline: string | null;
-  urgency: string | null;
-  latestMessageAt: string | null;
-  importance: string | null;
-  summary: string | null;
-  sender: string | null;
-  gmailUrl: string;
-  category: string | null;
-  actionType: string | null;
-  confidence: number | null;
-  updatedAt: string | null;
-}
+export type { ActionListItem } from "@/lib/actions/action-list-item";
 
 interface ThreadJoin {
   id: string;
@@ -39,6 +21,7 @@ interface ThreadJoin {
   short_display_title: string | null;
   action_summary: string | null;
   action_reason: string | null;
+  importance_reason: string | null;
   confidence: number | null;
 }
 
@@ -68,6 +51,7 @@ export function mapActionListItem(
     description,
     actionSummary,
     actionReason: usableDisplayText(joined?.action_reason),
+    importanceReason: usableDisplayText(joined?.importance_reason),
     waitingFor: (row.waiting_for as string | null) ?? null,
     snoozedUntil: typeof row.snoozed_until === "string" ? row.snoozed_until : null,
     deadline: (row.deadline as string | null) ?? null,
@@ -84,7 +68,7 @@ export function mapActionListItem(
   };
 }
 
-async function gmailEmailForUser(userId: string): Promise<string> {
+const gmailEmailForUser = cache(async (userId: string): Promise<string> => {
   const db = createAdminClient();
   const { data } = await db
     .from("gmail_connections")
@@ -94,7 +78,7 @@ async function gmailEmailForUser(userId: string): Promise<string> {
     .limit(1)
     .maybeSingle();
   return typeof data?.gmail_email === "string" ? data.gmail_email : "";
-}
+});
 
 export class ActionQueryError extends Error {
   constructor(
@@ -117,11 +101,11 @@ export async function listActionsForUser(
   const { data, error } = await db
     .from("action_items")
     .select(
-      "id, thread_id, status, title, description, waiting_for, deadline, urgency, snoozed_until, action_type, updated_at, email_threads ( id, summary, importance, latest_message_at, gmail_thread_id, participants, category, short_display_title, action_summary, action_reason, confidence )",
+      "id, thread_id, status, title, description, waiting_for, deadline, urgency, snoozed_until, action_type, updated_at, email_threads ( id, summary, importance, latest_message_at, gmail_thread_id, participants, category, short_display_title, action_summary, action_reason, importance_reason, confidence )",
     )
     .eq("user_id", userId)
     .eq("status", status)
-    .limit(200);
+    .limit(limit);
   if (error) {
     throw new ActionQueryError(500, "load_failed", "Failed to load actions from the database.");
   }
@@ -144,6 +128,45 @@ export async function listActionsForUser(
 }
 
 export async function countActionsForUser(userId: string, status: ActionStatus): Promise<number> {
-  const items = await listActionsForUser(userId, status, 200);
-  return items.length;
+  const db = createAdminClient();
+  const { count, error } = await db
+    .from("action_items")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("status", status);
+  if (error) {
+    throw new ActionQueryError(500, "load_failed", "Failed to count actions.");
+  }
+  return count ?? 0;
+}
+
+/** Stored action rows by status. Does not apply the open-list notice filter. */
+export async function countActionRowsByStatus(
+  userId: string,
+  statuses: readonly ActionStatus[],
+): Promise<Record<ActionStatus, number>> {
+  const db = createAdminClient();
+  const entries = await Promise.all(
+    statuses.map(async (status) => {
+      const { count, error } = await db
+        .from("action_items")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .eq("status", status);
+      if (error) {
+        throw new ActionQueryError(500, "load_failed", "Failed to count actions.");
+      }
+      return [status, count ?? 0] as const;
+    }),
+  );
+  const counts: Record<ActionStatus, number> = {
+    OPEN: 0,
+    WAITING: 0,
+    COMPLETED: 0,
+    SNOOZED: 0,
+  };
+  for (const [status, count] of entries) {
+    counts[status] = count;
+  }
+  return counts;
 }

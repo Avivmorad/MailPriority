@@ -24,6 +24,14 @@
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+  --color-urgency-high: var(--urgency-high);
+  --color-urgency-medium: var(--urgency-medium);
+  --color-urgency-low: var(--urgency-low);
+  --color-urgency-none: var(--urgency-none);
+  --color-urgency-unknown: var(--urgency-unknown);
+  --color-state-actions: var(--state-actions);
+  --color-state-pending: var(--state-pending);
+  --color-state-fyi: var(--state-fyi);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -51,73 +59,98 @@
 
 :root {
   color-scheme: light;
-  --background: oklch(0.985 0.004 85);
-  --foreground: oklch(0.22 0.02 260);
-  --card: oklch(0.998 0.002 85);
-  --card-foreground: oklch(0.22 0.02 260);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.02 260);
-  --primary: oklch(0.38 0.09 260);
-  --primary-foreground: oklch(0.985 0.004 85);
-  --secondary: oklch(0.96 0.01 260);
-  --secondary-foreground: oklch(0.28 0.04 260);
-  --muted: oklch(0.96 0.008 85);
-  --muted-foreground: oklch(0.38 0.02 260);
-  --accent: oklch(0.955 0.02 260);
-  --accent-foreground: oklch(0.28 0.04 260);
-  --destructive: oklch(0.55 0.2 27);
-  --border: oklch(0.9 0.01 85);
-  --input: oklch(0.9 0.01 85);
-  --ring: oklch(0.55 0.08 260);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --background: #f6f7f9;
+  --foreground: #172033;
+  --card: #ffffff;
+  --card-foreground: #172033;
+  --popover: #ffffff;
+  --popover-foreground: #172033;
+  --primary: #294b7a;
+  --primary-foreground: #ffffff;
+  --secondary: #eef1f5;
+  --secondary-foreground: #172033;
+  --muted: #eef1f5;
+  --muted-foreground: #566273;
+  --accent: #e8eff8;
+  --accent-foreground: #172033;
+  --destructive: #c5565a;
+  --border: #d8dee8;
+  --input: #d8dee8;
+  --ring: #4779b8;
+  --urgency-high: #c5565a;
+  --urgency-medium: #b7792f;
+  --urgency-low: #36805b;
+  --urgency-none: #667085;
+  --urgency-unknown: #4779b8;
+  --state-actions: color-mix(in srgb, var(--urgency-medium) 18%, var(--card));
+  --state-pending: color-mix(in srgb, var(--urgency-unknown) 16%, var(--card));
+  --state-fyi: color-mix(in srgb, var(--urgency-none) 14%, var(--muted));
+  --chart-1: var(--urgency-high);
+  --chart-2: var(--urgency-medium);
+  --chart-3: var(--urgency-low);
+  --chart-4: var(--urgency-none);
+  --chart-5: var(--urgency-unknown);
   --radius: 0.75rem;
-  --sidebar: oklch(0.985 0.004 85);
-  --sidebar-foreground: oklch(0.22 0.02 260);
-  --sidebar-primary: oklch(0.38 0.09 260);
-  --sidebar-primary-foreground: oklch(0.985 0.004 85);
-  --sidebar-accent: oklch(0.96 0.01 260);
-  --sidebar-accent-foreground: oklch(0.28 0.04 260);
-  --sidebar-border: oklch(0.9 0.01 85);
-  --sidebar-ring: oklch(0.55 0.08 260);
+  /* App chrome rail widths — keep pad/width in sync via these vars only. */
+  --app-sidebar-width-expanded: 15rem;
+  --app-sidebar-width-collapsed: 4.75rem;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #172033;
+  --sidebar-primary: #294b7a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e8eff8;
+  --sidebar-accent-foreground: #172033;
+  --sidebar-border: #d8dee8;
+  --sidebar-ring: #4779b8;
+  /* Short drop plus a 1px edge so flat controls read as clickable. No blur bloom. */
+  --ui-click-shadow: 0 1px 2px #17203333, 0 0 0 1px #1720331a;
+  --ui-click-shadow-hover: 0 2px 4px #1720333d, 0 0 0 1px #17203324;
 }
 
 .dark {
   color-scheme: dark;
-  --background: oklch(0.16 0.02 260);
-  --foreground: oklch(0.97 0.01 85);
-  --card: oklch(0.21 0.02 260);
-  --card-foreground: oklch(0.97 0.01 85);
-  --popover: oklch(0.21 0.02 260);
-  --popover-foreground: oklch(0.97 0.01 85);
-  --primary: oklch(0.82 0.06 260);
-  --primary-foreground: oklch(0.2 0.03 260);
-  --secondary: oklch(0.28 0.02 260);
-  --secondary-foreground: oklch(0.97 0.01 85);
-  --muted: oklch(0.28 0.02 260);
-  --muted-foreground: oklch(0.8 0.02 260);
-  --accent: oklch(0.28 0.03 260);
-  --accent-foreground: oklch(0.97 0.01 85);
-  --destructive: oklch(0.7 0.16 22);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 16%);
-  --ring: oklch(0.62 0.08 260);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.21 0.02 260);
-  --sidebar-foreground: oklch(0.97 0.01 85);
-  --sidebar-primary: oklch(0.62 0.12 260);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.28 0.02 260);
-  --sidebar-accent-foreground: oklch(0.97 0.01 85);
-  --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: oklch(0.62 0.08 260);
+  --background: #0c111a;
+  --foreground: #e9eef5;
+  --card: #141b26;
+  --card-foreground: #e9eef5;
+  --popover: #141b26;
+  --popover-foreground: #e9eef5;
+  --primary: #afc5e3;
+  --primary-foreground: #122033;
+  --secondary: #1b2431;
+  --secondary-foreground: #e9eef5;
+  --muted: #1b2431;
+  --muted-foreground: #a4afc0;
+  --accent: #24354c;
+  --accent-foreground: #e9eef5;
+  --destructive: #f08a8e;
+  --border: #2a3646;
+  --input: #2a3646;
+  --ring: #8eb7eb;
+  --urgency-high: #f08a8e;
+  --urgency-medium: #e3b768;
+  --urgency-low: #78c39a;
+  --urgency-none: #a4afc0;
+  --urgency-unknown: #8eb7eb;
+  --state-actions: color-mix(in srgb, var(--urgency-medium) 22%, var(--card));
+  --state-pending: color-mix(in srgb, var(--urgency-unknown) 20%, var(--card));
+  --state-fyi: color-mix(in srgb, var(--urgency-none) 16%, var(--card));
+  --chart-1: var(--urgency-high);
+  --chart-2: var(--urgency-medium);
+  --chart-3: var(--urgency-low);
+  --chart-4: var(--urgency-none);
+  --chart-5: var(--urgency-unknown);
+  --sidebar: #141b26;
+  --sidebar-foreground: #e9eef5;
+  --sidebar-primary: #afc5e3;
+  --sidebar-primary-foreground: #122033;
+  --sidebar-accent: #24354c;
+  --sidebar-accent-foreground: #e9eef5;
+  --sidebar-border: #2a3646;
+  --sidebar-ring: #8eb7eb;
+  /* Darker drop plus a 1px edge so navy controls separate from the rail. */
+  --ui-click-shadow: 0 1px 2px oklch(0 0 0 / 0.6), 0 0 0 1px oklch(1 0 0 / 0.14);
+  --ui-click-shadow-hover: 0 2px 4px oklch(0 0 0 / 0.68), 0 0 0 1px oklch(1 0 0 / 0.18);
 }
 
 @layer base {
@@ -125,11 +158,14 @@
     @apply border-border outline-ring/50;
   }
   html {
-    @apply font-sans;
+    @apply h-full font-sans antialiased;
+    overflow-x: clip;
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
     line-height: 1.6;
+    overflow-x: clip;
+    min-width: 0;
   }
   :lang(he),
   [dir="rtl"],
@@ -139,12 +175,97 @@
   }
 }
 
+@layer components {
+  /**
+   * Shared clickable affordance: quiet resting depth plus a 1px hover lift.
+   * Shadow stays a short neutral drop (see --ui-click-shadow). No colored bloom.
+   * Pair with cursor-pointer + focus-visible rings for a11y.
+   */
+  .ui-interactive {
+    box-shadow: var(--ui-click-shadow);
+    transition-property: background-color, border-color, color, transform, opacity, box-shadow;
+    transition-duration: 150ms;
+    transition-timing-function: ease-out;
+  }
+
+  .ui-interactive:hover:not(:disabled):not([aria-disabled="true"]) {
+    transform: translateY(-1px);
+    box-shadow: var(--ui-click-shadow-hover);
+  }
+
+  .ui-interactive:active:not(:disabled):not([aria-disabled="true"]) {
+    transform: translateY(0);
+    box-shadow: var(--ui-click-shadow);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
 
-  .animate-pulse {
-    animation: none;
+  .animate-pulse,
+  .animate-in,
+  .animate-out {
+    animation: none !important;
   }
+
+  .motion-safe\:lg\:transition-\[width\],
+  .motion-safe\:lg\:transition-\[padding\],
+  .motion-safe\:animate-in {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .ui-interactive {
+    transition: none !important;
+  }
+
+  .ui-interactive:hover:not(:disabled):not([aria-disabled="true"]),
+  .ui-interactive:active:not(:disabled):not([aria-disabled="true"]) {
+    transform: none !important;
+  }
+}
+
+/*
+ * Collapse and expand share one square. Unlayered so button utilities
+ * (including aria-expanded fills) cannot resize one state.
+ */
+.sidebar-toggle {
+  width: 2.25rem;
+  height: 2.25rem;
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  max-width: 2.25rem;
+  max-height: 2.25rem;
+  padding: 0;
+  line-height: 0;
+  box-shadow: none;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background-color: transparent;
+  color: var(--muted-foreground);
+}
+
+.sidebar-toggle svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.sidebar-toggle:hover:not(:disabled),
+.sidebar-toggle:focus-visible {
+  background-color: var(--sidebar-accent);
+  color: var(--sidebar-accent-foreground);
+}
+
+html[data-sidebar-resizing] [data-app-sidebar],
+html[data-sidebar-resizing] [data-app-shell] {
+  transition: none !important;
+}
+
+html[data-sidebar-resizing],
+html[data-sidebar-resizing] * {
+  cursor: col-resize !important;
+  user-select: none !important;
 }

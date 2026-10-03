@@ -8,6 +8,7 @@ export const FEEDBACK_KINDS = [
   "no_action",
   "waiting",
   "not_waiting",
+  "ignore",
 ] as const;
 
 export const threadFeedbackSchema = z.object({

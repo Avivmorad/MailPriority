@@ -22,7 +22,11 @@ describe("mapRecentThreadRow", () => {
         summary: "Payment posted.",
         status: "ignore",
         importance: "low",
+        importance_reason: "Paid receipt.",
+        urgency: "none",
+        deadline: null,
         category: "finance",
+        participants: [{ name: "Bank", email: "receipts@bank.example" }],
         latest_message_at: "2026-09-10T10:00:00.000Z",
       }),
     ).toEqual({
@@ -32,8 +36,13 @@ describe("mapRecentThreadRow", () => {
       summary: "Payment posted.",
       status: "ignore",
       importance: "low",
+      importanceReason: "Paid receipt.",
       category: "finance",
+      urgency: "none",
+      deadline: null,
+      sender: "Bank",
       latestMessageAt: "2026-09-10T10:00:00.000Z",
+      gmailUrl: null,
     });
   });
 });

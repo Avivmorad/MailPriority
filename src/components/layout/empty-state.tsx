@@ -17,25 +17,25 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "bg-card rounded-xl border border-dashed px-5 py-10 text-center",
+        "bg-card rounded-xl border border-dashed px-5 py-10 text-center sm:px-6 sm:py-12",
         isError ? "border-destructive/40 bg-destructive/5" : "border-border/80",
       )}
       role={isError ? "alert" : "status"}
     >
       <p
         className={cn(
-          "font-semibold tracking-tight",
+          "text-base font-semibold tracking-tight",
           isError ? "text-destructive" : "text-foreground",
         )}
       >
         {title}
       </p>
       {description ? (
-        <p className="text-muted-foreground mx-auto mt-1.5 max-w-md text-sm leading-relaxed">
+        <p className="text-muted-foreground mx-auto mt-2 max-w-md text-sm leading-relaxed text-pretty">
           {description}
         </p>
       ) : null}
-      {action ? <div className="mt-4 flex justify-center">{action}</div> : null}
+      {action ? <div className="mt-5 flex justify-center">{action}</div> : null}
     </div>
   );
 }

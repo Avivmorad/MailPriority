@@ -40,7 +40,7 @@ const contextLimitsSchema = z.object({
   MAX_THREAD_MESSAGES: z.coerce.number().int().positive().default(6),
   MAX_MESSAGE_CHARS: z.coerce.number().int().positive().default(12000),
   MAX_THREAD_CHARS: z.coerce.number().int().positive().default(35000),
-  AI_MAX_CONCURRENCY: z.coerce.number().int().positive().default(4),
+  AI_MAX_CONCURRENCY: z.coerce.number().int().positive().default(8),
   /** Local budget under Google's typical 15,000 units/user/minute. */
   GMAIL_QUOTA_UNITS_PER_MINUTE: z.coerce.number().int().positive().default(12_000),
 });

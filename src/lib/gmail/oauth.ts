@@ -6,7 +6,7 @@ import { getGmailEnv } from "@/lib/config/env";
 import { GMAIL_MODIFY_SCOPE } from "@/lib/gmail/constants";
 import { emitProductEvent } from "@/lib/observability/events";
 import { GMAIL_UNITS } from "@/lib/gmail/quota";
-import { withGmailRetry } from "@/lib/gmail/retry";
+import { GMAIL_CONNECT_RETRY_DELAYS_MS, withGmailRetry } from "@/lib/gmail/retry";
 import {
   GMAIL_REQUEST_TIMEOUT_MS,
   withGmailRequest,
@@ -119,6 +119,7 @@ export async function exchangeAuthorizationCode(code: string): Promise<GoogleTok
 export async function fetchGmailIdentity(
   accessToken: string,
   refreshToken: string,
+  options: { delaysMs?: number[] } = {},
 ): Promise<{ email: string; googleAccountId: string | null }> {
   const client = createOAuth2Client();
   client.setCredentials({ access_token: accessToken, refresh_token: refreshToken });
@@ -126,9 +127,10 @@ export async function fetchGmailIdentity(
   const gmail = google.gmail({ version: "v1", auth: client });
   try {
     const profile = await withGmailRetry(
-      (options) => gmail.users.getProfile({ userId: "me" }, options),
+      (retryOptions) => gmail.users.getProfile({ userId: "me" }, retryOptions),
       {
         units: GMAIL_UNITS.getProfile,
+        delaysMs: options.delaysMs ?? GMAIL_CONNECT_RETRY_DELAYS_MS,
       },
     );
     const email = profile.data.emailAddress;

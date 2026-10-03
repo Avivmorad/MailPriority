@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { z } from "zod";
 
 import { createEmailTriageProvider } from "@/lib/ai/client";
@@ -32,7 +33,7 @@ import { createSupabaseScanStore } from "@/lib/scans/store";
 import { persistDigestAfterScan } from "@/lib/digest/build-digest";
 import { emitProductEvent } from "@/lib/observability/events";
 import { captureSafeException } from "@/lib/observability/sentry-report";
-import { isClassifiedSummaryThread } from "@/lib/mail/buckets";
+import { scanProgressPercent } from "@/lib/scans/progress";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { ScanRunResult } from "@/lib/scans/types";
 
@@ -318,7 +319,7 @@ export async function getScanRunsForUser(userId: string, limit = 10) {
   return data ?? [];
 }
 
-export async function getLatestScanRunForUser(userId: string) {
+export const getLatestScanRunForUser = cache(async (userId: string) => {
   const db = createAdminClient();
   const { data, error } = await db
     .from("scan_runs")
@@ -331,29 +332,63 @@ export async function getLatestScanRunForUser(userId: string) {
     return null;
   }
   return data;
+});
+
+/** Progress poll payload: status, percent, and counts. No history rows. */
+export async function getScanProgressForUser(userId: string) {
+  const db = createAdminClient();
+  const { data, error } = await db
+    .from("scan_runs")
+    .select(
+      "id, status, threads_discovered, threads_checked, error_code, error_message, updated_at",
+    )
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error || !data) {
+    return null;
+  }
+  const threadsDiscovered = Number(data.threads_discovered ?? 0);
+  const threadsChecked = Number(data.threads_checked ?? 0);
+  return {
+    id: String(data.id),
+    status: String(data.status),
+    threads_discovered: threadsDiscovered,
+    threads_checked: threadsChecked,
+    percent: scanProgressPercent(threadsChecked, threadsDiscovered),
+    error_code: (data.error_code as string | null) ?? null,
+    error_message: (data.error_message as string | null) ?? null,
+    updated_at: (data.updated_at as string | null) ?? null,
+  };
+}
+
+async function exactThreadCount(
+  query: PromiseLike<{ count: number | null; error: { message: string } | null }>,
+): Promise<number> {
+  const { count, error } = await query;
+  if (error) {
+    throw new Error("Failed to load inbox counts");
+  }
+  return count ?? 0;
 }
 
 export async function getInboxCountsForUser(userId: string) {
   const db = createAdminClient();
-  const { data, error } = await db
-    .from("email_threads")
-    .select("importance, status, requires_action, summary")
-    .eq("user_id", userId);
-  if (error) {
-    throw new Error("Failed to load inbox counts");
-  }
-  const rows = data ?? [];
-  return {
-    processed: rows.length,
-    important: rows.filter((row) => row.importance === "high").length,
-    needAction: rows.filter((row) => row.requires_action === true).length,
-    waiting: rows.filter((row) => row.status === "waiting").length,
-    ignored: rows.filter((row) => row.status === "ignore").length,
-    fyi: rows.filter((row) =>
-      isClassifiedSummaryThread({
-        status: row.status,
-        summary: typeof row.summary === "string" ? row.summary : null,
-      }),
-    ).length,
-  };
+  const threads = () =>
+    db.from("email_threads").select("id", { count: "exact", head: true }).eq("user_id", userId);
+  const [processed, important, needAction, waiting, ignored, fyi] = await Promise.all([
+    exactThreadCount(threads()),
+    exactThreadCount(threads().eq("importance", "high")),
+    exactThreadCount(threads().eq("requires_action", true)),
+    exactThreadCount(threads().eq("status", "waiting")),
+    exactThreadCount(threads().eq("status", "ignore")),
+    exactThreadCount(
+      threads()
+        .in("status", ["informational", "resolved"])
+        .not("summary", "is", null)
+        .not("summary", "match", "^\\s*$"),
+    ),
+  ]);
+  return { processed, important, needAction, waiting, ignored, fyi };
 }

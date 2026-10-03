@@ -106,7 +106,7 @@ export async function getDigestSettingsForUser(
     .eq("user_id", userId)
     .maybeSingle();
   if (error) {
-    throw new DigestQueryError(500, "settings_failed", "Failed to load digest settings.");
+    throw new DigestQueryError(500, "settings_failed", "Failed to load History settings.");
   }
   return { digestEnabled: data?.digest_enabled !== false };
 }
@@ -150,7 +150,7 @@ export async function loadDigestPeriodActivity(input: {
     .gte("received_at", input.periodStart)
     .lte("received_at", input.periodEnd);
   if (messageError) {
-    throw new DigestQueryError(500, "activity_failed", "Failed to load digest period messages.");
+    throw new DigestQueryError(500, "activity_failed", "Failed to load messages for this period.");
   }
 
   const mappedMessages = (messages ?? []).map((row) => ({
@@ -170,7 +170,7 @@ export async function loadDigestPeriodActivity(input: {
       .eq("user_id", input.userId)
       .in("id", slice);
     if (threadError) {
-      throw new DigestQueryError(500, "activity_failed", "Failed to load digest period threads.");
+      throw new DigestQueryError(500, "activity_failed", "Failed to load threads for this period.");
     }
     for (const row of threadRows ?? []) {
       threads.push({
@@ -222,7 +222,7 @@ export async function upsertDigestReport(input: {
     .select(DIGEST_SELECT)
     .single();
   if (error || !data) {
-    throw new DigestQueryError(500, "upsert_failed", "Failed to save digest.");
+    throw new DigestQueryError(500, "upsert_failed", "Failed to save this History entry.");
   }
   return mapDigestReportRow(data);
 }
@@ -237,7 +237,7 @@ export async function getLatestDigestForUser(userId: string): Promise<DigestRepo
     .limit(1)
     .maybeSingle();
   if (error) {
-    throw new DigestQueryError(500, "load_failed", "Failed to load latest digest.");
+    throw new DigestQueryError(500, "load_failed", "Failed to load the latest History entry.");
   }
   return data ? mapDigestReportRow(data) : null;
 }
@@ -251,7 +251,7 @@ export async function listDigestsForUser(userId: string, limit = 20): Promise<Di
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error) {
-    throw new DigestQueryError(500, "load_failed", "Failed to load digest history.");
+    throw new DigestQueryError(500, "load_failed", "Failed to load History.");
   }
   return (data ?? []).map((row) => mapDigestReportRow(row));
 }

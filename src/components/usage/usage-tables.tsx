@@ -22,17 +22,17 @@ export function UsageDayTable({ rows }: { rows: UsageDayAggregate[] }) {
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="border-border bg-card overflow-x-auto rounded-xl border shadow-xs">
       <table className="w-full min-w-[40rem] text-left text-sm">
         <thead>
           <tr className="border-border text-muted-foreground border-b">
-            <th className="py-2 pr-3 font-medium">Day (UTC)</th>
-            <th className="py-2 pr-3 font-medium">Provider</th>
-            <th className="py-2 pr-3 font-medium">Model</th>
-            <th className="py-2 pr-3 font-medium">Calls</th>
-            <th className="py-2 pr-3 font-medium">Input</th>
-            <th className="py-2 pr-3 font-medium">Output</th>
-            <th className="py-2 font-medium">Cost</th>
+            <th className="px-4 py-2.5 pr-3 font-medium">Day (UTC)</th>
+            <th className="py-2.5 pr-3 font-medium">Provider</th>
+            <th className="py-2.5 pr-3 font-medium">Model</th>
+            <th className="py-2.5 pr-3 font-medium">Calls</th>
+            <th className="py-2.5 pr-3 font-medium">Input</th>
+            <th className="py-2.5 pr-3 font-medium">Output</th>
+            <th className="py-2.5 pr-4 font-medium">Cost</th>
           </tr>
         </thead>
         <tbody>
@@ -41,16 +41,16 @@ export function UsageDayTable({ rows }: { rows: UsageDayAggregate[] }) {
               key={`${row.day}-${row.provider}-${row.model}`}
               className="border-border/70 border-b last:border-0"
             >
-              <td className="py-2 pr-3 whitespace-nowrap">{row.day}</td>
-              <td className="py-2 pr-3">{row.provider}</td>
-              <td className="py-2 pr-3 font-mono text-xs">{row.model}</td>
-              <td className="py-2 pr-3">
+              <td className="px-4 py-2.5 pr-3 whitespace-nowrap">{row.day}</td>
+              <td className="py-2.5 pr-3">{row.provider}</td>
+              <td className="py-2.5 pr-3 font-mono text-xs">{row.model}</td>
+              <td className="py-2.5 pr-3">
                 {row.calls}
                 <span className="text-muted-foreground"> ({row.okCalls} ok)</span>
               </td>
-              <td className="py-2 pr-3">{formatTokens(row.inputTokens)}</td>
-              <td className="py-2 pr-3">{formatTokens(row.outputTokens)}</td>
-              <td className="py-2">{formatCost(row.microUsd, row.billable)}</td>
+              <td className="py-2.5 pr-3">{formatTokens(row.inputTokens)}</td>
+              <td className="py-2.5 pr-3">{formatTokens(row.outputTokens)}</td>
+              <td className="py-2.5 pr-4">{formatCost(row.microUsd, row.billable)}</td>
             </tr>
           ))}
         </tbody>
@@ -65,34 +65,34 @@ export function UsageScanTable({ rows }: { rows: UsageScanAggregate[] }) {
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="border-border bg-card overflow-x-auto rounded-xl border shadow-xs">
       <table className="w-full min-w-[44rem] text-left text-sm">
         <thead>
           <tr className="border-border text-muted-foreground border-b">
-            <th className="py-2 pr-3 font-medium">Started</th>
-            <th className="py-2 pr-3 font-medium">Trigger</th>
-            <th className="py-2 pr-3 font-medium">Calls</th>
-            <th className="py-2 pr-3 font-medium">Input</th>
-            <th className="py-2 pr-3 font-medium">Output</th>
-            <th className="py-2 pr-3 font-medium">Absent</th>
-            <th className="py-2 font-medium">Cost</th>
+            <th className="px-4 py-2.5 pr-3 font-medium">Started</th>
+            <th className="py-2.5 pr-3 font-medium">Trigger</th>
+            <th className="py-2.5 pr-3 font-medium">Calls</th>
+            <th className="py-2.5 pr-3 font-medium">Input</th>
+            <th className="py-2.5 pr-3 font-medium">Output</th>
+            <th className="py-2.5 pr-3 font-medium">Absent</th>
+            <th className="py-2.5 pr-4 font-medium">Cost</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row) => (
             <tr key={row.scanId} className="border-border/70 border-b last:border-0">
-              <td className="py-2 pr-3 whitespace-nowrap">
+              <td className="px-4 py-2.5 pr-3 whitespace-nowrap">
                 {row.startedAt ? new Date(row.startedAt).toISOString().slice(0, 16) + "Z" : "—"}
               </td>
-              <td className="py-2 pr-3">{row.triggerType ?? "—"}</td>
-              <td className="py-2 pr-3">
+              <td className="py-2.5 pr-3">{row.triggerType ?? "—"}</td>
+              <td className="py-2.5 pr-3">
                 {row.calls}
                 <span className="text-muted-foreground"> ({row.okCalls} ok)</span>
               </td>
-              <td className="py-2 pr-3">{formatTokens(row.inputTokens)}</td>
-              <td className="py-2 pr-3">{formatTokens(row.outputTokens)}</td>
-              <td className="py-2 pr-3">{row.absentCalls}</td>
-              <td className="py-2">{formatCost(row.microUsd, row.billable)}</td>
+              <td className="py-2.5 pr-3">{formatTokens(row.inputTokens)}</td>
+              <td className="py-2.5 pr-3">{formatTokens(row.outputTokens)}</td>
+              <td className="py-2.5 pr-3">{row.absentCalls}</td>
+              <td className="py-2.5 pr-4">{formatCost(row.microUsd, row.billable)}</td>
             </tr>
           ))}
         </tbody>

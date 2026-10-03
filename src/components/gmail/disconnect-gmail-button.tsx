@@ -8,7 +8,7 @@ export function DisconnectGmailButton({ returnTo = "/settings" }: { returnTo?: s
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     if (
       !window.confirm(
-        "Disconnect Gmail? MailPriority will stop scanning. Historical summaries stay until you delete analysis data.",
+        "Disconnect Gmail? MailPriority will stop scanning and remove stored mail from this app. Messages in Gmail stay.",
       )
     ) {
       event.preventDefault();

@@ -1,7 +1,7 @@
 import { categoryPromptLines } from "@/lib/ai/categories";
 import type { ThreadAnalysisInput } from "@/lib/ai/types";
 
-export const TRIAGE_PROMPT_VERSION = "mailpilot-triage-v9";
+export const TRIAGE_PROMPT_VERSION = "mailpilot-triage-v10";
 
 export const UNTRUSTED_THREAD_START = "-----BEGIN UNTRUSTED EMAIL THREAD-----";
 export const UNTRUSTED_THREAD_END = "-----END UNTRUSTED EMAIL THREAD-----";
@@ -60,6 +60,7 @@ ${categoryPromptLines()}
 
 Language:
 - Write all user-facing text fields in English: summary, short_display_title, action_summary, action_reason, importance_reason, waiting_for, deadline_text, sender_name, and organization.
+- action_summary is the Do line. action_reason and importance_reason are the Why this tab line. Write those fields as English sentences even when the email subject or body is in another language. Do not copy that language into action_summary, action_reason, or importance_reason.
 - Keep enum field values in English exactly as defined by the schema.
 
 Untrusted content:

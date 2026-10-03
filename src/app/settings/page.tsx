@@ -37,7 +37,12 @@ export default async function SettingsPage({
   return (
     <AppChrome user={user} current="settings" width="narrow">
       <PageHeader title="Settings" description={SETTINGS_PAGE_DESCRIPTION} />
-      <GmailConnectionCard status={gmailStatus} gmailFlash={params.gmail} reason={params.reason} />
+      <GmailConnectionCard
+        status={gmailStatus}
+        gmailFlash={params.gmail}
+        reason={params.reason}
+        withSettingInfo
+      />
       <ScanPreferencesForm
         dailyScanTime={preferences.dailyScanTime}
         timezone={preferences.timezone}

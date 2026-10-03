@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  disconnectGmailAndClearAnalysis,
   gmailCallbackErrorRedirect,
   gmailStatusErrorMessage,
   isGmailMailboxClaimedByAnotherUser,
@@ -115,6 +116,36 @@ describe("isGmailMailboxUniqueViolation", () => {
     expect(isGmailMailboxUniqueViolation({ code: "23505", message: "users_email_key" })).toBe(
       false,
     );
+  });
+});
+
+describe("disconnectGmailAndClearAnalysis", () => {
+  it("clears stored analysis after the connection is disconnected", async () => {
+    const order: string[] = [];
+    await disconnectGmailAndClearAnalysis("user-1", {
+      disconnect: async (userId) => {
+        order.push(`disconnect:${userId}`);
+      },
+      purge: async (userId) => {
+        order.push(`purge:${userId}`);
+      },
+    });
+    expect(order).toEqual(["disconnect:user-1", "purge:user-1"]);
+  });
+
+  it("does not purge when disconnect fails", async () => {
+    const purged: string[] = [];
+    await expect(
+      disconnectGmailAndClearAnalysis("user-1", {
+        disconnect: async () => {
+          throw new Error("revoke failed");
+        },
+        purge: async (userId) => {
+          purged.push(userId);
+        },
+      }),
+    ).rejects.toThrow("revoke failed");
+    expect(purged).toEqual([]);
   });
 });
 

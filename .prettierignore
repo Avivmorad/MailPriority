@@ -8,3 +8,4 @@ supabase/.temp
 .t12-check
 .vercel
 .cursor
+.playwright-mcp/

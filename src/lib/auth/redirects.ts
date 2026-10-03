@@ -16,9 +16,12 @@ export const SAFE_AUTH_NEXT_PATHS = [
   "/login/update-password",
   "/onboarding",
   "/dashboard",
+  "/scan",
   "/mail",
+  "/history",
   "/digests",
   "/settings",
+  "/usage",
   "/actions",
 ] as const;
 

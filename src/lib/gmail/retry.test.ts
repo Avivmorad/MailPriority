@@ -1,7 +1,12 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 
 import { resetSharedGmailQuotaForTests } from "@/lib/gmail/quota";
-import { isGmailAuthError, isGmailQuotaError, withGmailRetry } from "@/lib/gmail/retry";
+import {
+  GMAIL_CONNECT_RETRY_DELAYS_MS,
+  isGmailAuthError,
+  isGmailQuotaError,
+  withGmailRetry,
+} from "@/lib/gmail/retry";
 import { GmailDeadlineError } from "@/lib/gmail/request-budget";
 
 beforeEach(() => {
@@ -76,6 +81,18 @@ describe("withGmailRetry", () => {
     const operation = vi.fn(async () => "ok");
     const sleep = vi.fn(async () => undefined);
     await withGmailRetry(operation, { units: 10, delaysMs: [], sleep });
+    expect(operation).toHaveBeenCalledTimes(1);
+    expect(sleep).not.toHaveBeenCalled();
+  });
+
+  it("does not sleep on connect-style empty retry delays after a 429", async () => {
+    const sleep = vi.fn(async () => undefined);
+    const operation = vi.fn(async () => {
+      throw { response: { status: 429 }, message: "Quota exceeded" };
+    });
+    await expect(
+      withGmailRetry(operation, { delaysMs: GMAIL_CONNECT_RETRY_DELAYS_MS, sleep }),
+    ).rejects.toMatchObject({ response: { status: 429 } });
     expect(operation).toHaveBeenCalledTimes(1);
     expect(sleep).not.toHaveBeenCalled();
   });

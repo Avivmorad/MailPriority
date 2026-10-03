@@ -17,7 +17,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }
   try {
     const result = await saveThreadFeedback(user.id, id, parsed.data.kind);
-    return NextResponse.json({ ok: true, applied: result.applied });
+    return NextResponse.json({
+      ok: true,
+      applied: result.applied,
+      actionId: result.actionId,
+    });
   } catch (error) {
     if (error instanceof ThreadQueryError) {
       return NextResponse.json(

@@ -8,8 +8,8 @@
 > - [`../SETUP.md`](../SETUP.md) — setup and deployment
 > - [`../OWNER_TASKS.md`](../OWNER_TASKS.md) — owner console checks
 >
-> The user-facing product name is **MailPriority**. This repository and the
-> Gmail label prefix remain **MailPilot** (`MailPilot/`). The original working
+> The user-facing product name is **MailPriority**. This repository stays
+> **MailPilot**. Gmail managed labels use **`MailPriority/`**. The original working
 > name “Inbox Triage AI” is archived — do not use it in UI or new docs.
 >
 > Many sections below are outdated (OpenAI, `AI/*` labels, Waiting List UI
@@ -324,7 +324,7 @@ UI:
 
 # 6. Gmail Labels
 
-> **Superseded by [`PRODUCT.md`](../PRODUCT.md):** use the `MailPilot/*` label namespace (not `AI/*`). Each thread has one canonical DB `status`; Gmail may show multiple `MailPilot/*` presentation labels. See overlay § "Gmail labels".
+> **Superseded by [`PRODUCT.md`](../PRODUCT.md):** use the `MailPriority/*` label namespace (not `AI/*`). Each thread has one canonical DB `status`; Gmail may show multiple `MailPriority/*` presentation labels. See overlay § "Gmail labels".
 
 בעת החיבור הראשון יש לוודא שקיימים labels:
 
@@ -3209,7 +3209,7 @@ MVP is complete only when this flow works end-to-end:
 
 # 65. Example End-to-End Scenario
 
-> **Superseded by [`PRODUCT.md`](../PRODUCT.md):** use `category: "career"` (not `"work"`) and `MailPilot/*` Gmail labels (not `AI/*`). See overlay §§ "Action topics" and "Gmail labels".
+> **Superseded by [`PRODUCT.md`](../PRODUCT.md):** use `category: "career"` (not `"work"`) and `MailPriority/*` Gmail labels (not `AI/*`). See overlay §§ "Action topics" and "Gmail labels".
 
 Incoming:
 
@@ -3259,7 +3259,7 @@ Reply with your availability for Monday or Tuesday.
 
 # 66. Waiting Example
 
-> **Superseded by [`PRODUCT.md`](../PRODUCT.md):** Gmail labels use the `MailPilot/*` namespace (not `AI/*`). Waiting state is tracked in the DB; see overlay § "Gmail labels".
+> **Superseded by [`PRODUCT.md`](../PRODUCT.md):** Gmail labels use the `MailPriority/*` namespace (not `AI/*`). Waiting state is tracked in the DB; see overlay § "Gmail labels".
 
 User sends:
 
@@ -3369,7 +3369,7 @@ Cursor implementation must explicitly cover:
 11. AI call only for changed Threads.
 12. Counts are computed by backend/DB, not invented by LLM.
 13. User manual overrides take precedence over reprocessing unchanged content.
-14. Gmail user labels outside `AI/*` are never modified. (**Superseded:** use `MailPilot/*` — see [`PRODUCT.md`](../PRODUCT.md) § "Gmail labels".)
+14. Gmail user labels outside `AI/*` are never modified. (**Superseded:** use `MailPriority/*` — see [`PRODUCT.md`](../PRODUCT.md) § "Gmail labels".)
 15. Attachment contents are not analyzed in MVP.
 
 ---

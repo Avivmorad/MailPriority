@@ -9,7 +9,7 @@ Database schema and migrations for MailPriority (this repository is MailPilot).
     action items, and scan runs.
   - `0004_classification_feedback.sql` — thread classification feedback.
   - `0005_scan_progress.sql` — live scan progress (`threads_discovered` / `threads_checked`).
-  - `0006_digest_reports.sql` — in-app digest snapshots (not email).
+  - `0006_digest_reports.sql` — History snapshots (not an email digest).
   - `0007_scan_scheduling.sql` — connection leases, `scan_jobs`, dispatcher claim.
   - `0008_scan_admission.sql` — at most one RUNNING `scan_runs` row per connection.
   - `0009_function_hardening.sql` — pin `search_path` on trigger functions; revoke Data API execute on `handle_new_user`.

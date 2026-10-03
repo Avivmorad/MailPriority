@@ -1,23 +1,28 @@
-import { Clock3, Inbox, ListChecks } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { ActionItemCard } from "@/components/actions/action-item-card";
+import { InboxOverviewHeader } from "@/components/dashboard/inbox-overview-header";
+import { InboxStatCard } from "@/components/dashboard/inbox-stat-card";
 import { DigestReportCard } from "@/components/digest/digest-report-card";
 import { GmailConnectionCard } from "@/components/gmail/gmail-connection-card";
 import { AppChrome } from "@/components/layout/app-chrome";
+import { CollapsibleBlock } from "@/components/layout/collapsible-block";
 import { EmptyState } from "@/components/layout/empty-state";
-import { PageHeader } from "@/components/layout/page-header";
-import { InitialScanCard } from "@/components/scans/initial-scan-card";
 import { buttonVariants } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { listActionsForUser, type ActionListItem } from "@/lib/actions/queries";
+import {
+  countActionsForUser,
+  listActionsForUser,
+  type ActionListItem,
+} from "@/lib/actions/queries";
 import { getDashboardChangesForUser } from "@/lib/dashboard/queries";
-import { ensureDigestForLatestScan } from "@/lib/digest/build-digest";
+import { getLatestDigestForUser } from "@/lib/digest/queries";
 import { getGmailStatusForUser } from "@/lib/gmail/connections";
 import { shouldShowGmailRecoveryCard } from "@/lib/gmail/recovery";
-import { getOnboardingStepForUser } from "@/lib/onboarding/load";
-import { getInboxCountsForUser, getLatestScanRunForUser } from "@/lib/scans/manual";
+import { getMailFigures, type MailFigures } from "@/lib/mail/figures";
+import { getLatestScanRunForUser } from "@/lib/scans/manual";
+import { formatDateTime } from "@/lib/ui/format";
+import { labelForScanStatus } from "@/lib/ui/labels";
 import { getSessionUser } from "@/lib/supabase/auth";
 import { cn } from "@/lib/utils";
 
@@ -60,22 +65,14 @@ function nextStep({
   processed: number;
   scanRunning: boolean;
 }): { title: string; body: string; href: string; label: string } | null {
-  if (!connected) {
+  if (!connected || scanRunning) {
     return null;
-  }
-  if (scanRunning) {
-    return {
-      title: "Scan in progress",
-      body: "Progress is on the scan panel below. Mail lists update as threads finish.",
-      href: "#scan",
-      label: "View scan",
-    };
   }
   if (processed === 0) {
     return {
       title: "Run your first scan",
       body: "Choose a lookback window and classify recent mail. Actions will land here.",
-      href: "#scan",
+      href: "/scan",
       label: "Scan now",
     };
   }
@@ -105,49 +102,46 @@ export default async function DashboardPage({
     redirect("/login");
   }
 
-  const onboardingStep = await getOnboardingStepForUser(user.id);
-  if (onboardingStep !== "complete") {
-    const next = new URLSearchParams();
-    const pending = await searchParams;
-    if (pending.gmail) {
-      next.set("gmail", pending.gmail);
-    }
-    if (pending.reason) {
-      next.set("reason", pending.reason);
-    }
-    const query = next.toString();
-    redirect(query ? `/onboarding?${query}` : "/onboarding");
-  }
-
   const [params, gmailStatus] = await Promise.all([searchParams, getGmailStatusForUser(user.id)]);
   const connected = gmailStatus.connection?.status === "CONNECTED";
   const showGmailCard = Boolean(params.gmail) || shouldShowGmailRecoveryCard(gmailStatus);
-  const emptyCounts = { processed: 0, important: 0, needAction: 0, waiting: 0, ignored: 0, fyi: 0 };
-  const latestScan = connected ? await getLatestScanRunForUser(user.id) : null;
+  const emptyFigures: MailFigures = {
+    processed: 0,
+    actions: 0,
+    pending: 0,
+    forYou: 0,
+    ignored: 0,
+    important: 0,
+    closed: 0,
+    snoozed: 0,
+  };
+  let actionsLoadError = false;
+  let countsLoadError = false;
+
+  const [figures, openActions, openActionCount, latestScan] = connected
+    ? await Promise.all([
+        getMailFigures(user.id).catch(() => {
+          countsLoadError = true;
+          return emptyFigures;
+        }),
+        listActionsForUser(user.id, "OPEN", ATTENTION_PREVIEW).catch(() => {
+          actionsLoadError = true;
+          return [] as ActionListItem[];
+        }),
+        countActionsForUser(user.id, "OPEN").catch(() => null),
+        getLatestScanRunForUser(user.id),
+      ])
+    : [emptyFigures, [] as ActionListItem[], 0, null];
   const latestScanStatus = latestScan ? String(latestScan.status) : "";
   const latestStartedAt = typeof latestScan?.started_at === "string" ? latestScan.started_at : null;
   const since =
     (latestScanStatus === "SUCCESS" || latestScanStatus === "PARTIAL") && latestStartedAt
       ? latestStartedAt
       : (gmailStatus.connection?.lastSuccessfulScanAt ?? null);
-  let actionsLoadError = false;
-  let countsLoadError = false;
 
-  const [counts, openActions, latestDigest, dashboardChanges] = connected
+  const [latestDigest, dashboardChanges] = connected
     ? await Promise.all([
-        getInboxCountsForUser(user.id).catch(() => {
-          countsLoadError = true;
-          return emptyCounts;
-        }),
-        listActionsForUser(user.id, "OPEN").catch(() => {
-          actionsLoadError = true;
-          return [] as ActionListItem[];
-        }),
-        ensureDigestForLatestScan(
-          user.id,
-          latestScan ? String(latestScan.id) : null,
-          latestScan ? String(latestScan.status) : null,
-        ).catch(() => null),
+        getLatestDigestForUser(user.id).catch(() => null),
         getDashboardChangesForUser(user.id, since).catch(() => ({
           summary: {
             since: null,
@@ -161,8 +155,6 @@ export default async function DashboardPage({
         })),
       ])
     : [
-        emptyCounts,
-        [],
         null,
         {
           summary: {
@@ -177,8 +169,8 @@ export default async function DashboardPage({
         },
       ];
   const latestStatus = latestScan ? String(latestScan.status) : null;
-  const openCount = openActions.length;
-  const attentionItems = openActions.slice(0, ATTENTION_PREVIEW);
+  const openCount = openActionCount ?? figures.actions;
+  const attentionItems = openActions;
   const changeLine = dashboardChanges.line;
   const overdueOpen = dashboardChanges.summary.overdueOpen;
 
@@ -187,37 +179,29 @@ export default async function DashboardPage({
     : nextStep({
         connected,
         openCount,
-        processed: counts.processed,
+        processed: figures.processed,
         scanRunning: latestStatus === "RUNNING",
       });
-  const stats = [
-    {
-      label: "Actions",
-      value: connected && !actionsLoadError ? String(openCount) : "—",
-      href: "/mail?tab=open",
-      icon: ListChecks,
-      hero: true,
-    },
-    {
-      label: "Pending",
-      value: connected && !countsLoadError ? String(counts.waiting) : "—",
-      href: "/mail?tab=waiting",
-      icon: Clock3,
-      hero: false,
-    },
-    {
-      label: "For You",
-      value: connected && !countsLoadError ? String(counts.fyi) : "—",
-      href: "/mail?tab=summary",
-      icon: Inbox,
-      hero: false,
-    },
+  const showCount = connected && !countsLoadError;
+  const countText = (value: number) => (showCount ? String(value) : "—");
+  const inboxStats: Array<{ label: string; value: string; href?: string }> = [
+    { label: "Actions", value: countText(figures.actions), href: "/mail?tab=open" },
+    { label: "Pending", value: countText(figures.pending), href: "/mail?tab=waiting" },
+    { label: "For You", value: countText(figures.forYou), href: "/mail?tab=summary" },
+    { label: "Ignored", value: countText(figures.ignored), href: "/mail?tab=ignored" },
+    { label: "Closed", value: countText(figures.closed), href: "/mail?tab=completed" },
+    { label: "Snoozed", value: countText(figures.snoozed), href: "/mail?tab=snoozed" },
+    { label: "Important", value: countText(figures.important) },
   ];
+  const scanRunning = latestStatus === "RUNNING";
+  const lastScanFinishedAt =
+    latestScan && !scanRunning
+      ? ((latestScan.finished_at as string | null | undefined) ?? null)
+      : null;
 
   return (
     <AppChrome user={user} current="dashboard">
-      <PageHeader
-        title="Inbox overview"
+      <InboxOverviewHeader
         description={dashboardDescription({
           connected,
           scanDone: params.scan === "done",
@@ -234,68 +218,89 @@ export default async function DashboardPage({
         />
       ) : null}
 
+      <div className="bg-card ring-foreground/10 flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-xl px-4 py-4 shadow-xs ring-1">
+        <div className="min-w-0">
+          <p className="font-medium tracking-tight">
+            {scanRunning ? "Live progress" : "Last scan"}
+          </p>
+          {scanRunning ? (
+            <p className="text-muted-foreground mt-0.5 text-sm break-words">
+              A scan is running. Progress lives on the Scan tab.
+            </p>
+          ) : latestScan ? (
+            <p className="text-muted-foreground mt-0.5 text-sm break-normal">
+              {labelForScanStatus(latestStatus)}
+              {lastScanFinishedAt ? ` · ${formatDateTime(lastScanFinishedAt)}` : ""}
+              {` · ${Number(latestScan.messages_processed ?? 0)} emails`}
+            </p>
+          ) : (
+            <p className="text-muted-foreground mt-0.5 text-sm">
+              No scan yet. Progress and lookback controls live on the Scan tab.
+            </p>
+          )}
+          {changeLine ? (
+            <p className="text-muted-foreground mt-1 text-sm leading-relaxed break-words">
+              {changeLine}
+            </p>
+          ) : null}
+        </div>
+        <Link href="/scan" className={cn(buttonVariants(), "min-h-10 shrink-0 px-4")}>
+          {scanRunning || latestScan ? "Open scan" : "Scan now"}
+        </Link>
+      </div>
+
       {step ? (
-        <div className="bg-card ring-foreground/10 flex flex-wrap items-center justify-between gap-3 rounded-xl px-4 py-3 ring-1">
+        <div className="bg-card ring-foreground/10 flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-xl px-4 py-3.5 shadow-xs ring-1">
           <div className="min-w-0">
-            <p className="font-medium tracking-tight">{step.title}</p>
-            <p className="text-muted-foreground mt-0.5 text-sm leading-relaxed">{step.body}</p>
+            <p className="font-medium tracking-tight break-words">{step.title}</p>
+            <p className="text-muted-foreground mt-0.5 text-sm leading-relaxed break-words">
+              {step.body}
+            </p>
             {changeLine ? (
-              <p className="text-muted-foreground mt-1 text-sm leading-relaxed">{changeLine}</p>
+              <p className="text-muted-foreground mt-1 text-sm leading-relaxed break-words">
+                {changeLine}
+              </p>
             ) : null}
           </div>
-          <Link href={step.href} className={buttonVariants()}>
+          <Link href={step.href} className={cn(buttonVariants(), "min-h-10 shrink-0 px-4")}>
             {step.label}
           </Link>
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        {stats.map((stat) => (
-          <Link
-            key={stat.label}
-            href={stat.href}
-            className="block rounded-xl focus-visible:ring-2 focus-visible:ring-offset-2"
-          >
-            <Card
-              size={stat.hero ? "default" : "sm"}
-              className="hover:bg-muted/40 h-full transition-colors"
-            >
-              <CardContent className={cn(stat.hero ? "pt-1" : "")}>
-                <stat.icon className="text-muted-foreground mb-2 size-4" aria-hidden />
-                <div
-                  className={cn(
-                    "font-semibold tracking-tight tabular-nums",
-                    stat.hero ? "text-4xl" : "text-3xl",
-                  )}
-                >
-                  {stat.value}
-                </div>
-                <div className="text-muted-foreground mt-1 text-sm">{stat.label}</div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
+      <section className="min-w-0 space-y-3">
+        <h2 className="text-foreground text-lg font-semibold tracking-tight">Inbox now</h2>
+        <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+          {inboxStats.map((stat) => (
+            <InboxStatCard
+              key={stat.label}
+              label={stat.label}
+              value={stat.value}
+              href={stat.href}
+            />
+          ))}
+        </div>
+      </section>
 
-      <section className="space-y-3">
-        <div className="flex flex-wrap items-end justify-between gap-2">
-          <div>
-            <h2 className="text-foreground text-lg font-semibold tracking-tight">Actions</h2>
-            <p className="text-muted-foreground text-sm">
-              {overdueOpen > 0
-                ? "Overdue and urgent first. Full list lives in Mail."
-                : "Top actions. Full list lives in Mail."}
-            </p>
-          </div>
-          {openCount > 0 ? (
+      <CollapsibleBlock
+        storageKey="dashboard-actions"
+        title="Actions"
+        description={
+          overdueOpen > 0
+            ? "Overdue and urgent first. Full list lives in Mail."
+            : "Top actions. Full list lives in Mail."
+        }
+        action={
+          openCount > 0 ? (
             <Link
               href="/mail?tab=open"
               className="text-primary text-sm font-medium hover:underline"
             >
               View all in Mail
             </Link>
-          ) : null}
-        </div>
+          ) : undefined
+        }
+      >
         {actionsLoadError ? (
           <EmptyState
             variant="error"
@@ -326,7 +331,7 @@ export default async function DashboardPage({
             }
             action={
               connected ? (
-                <Link href="#scan" className={buttonVariants({ size: "sm" })}>
+                <Link href="/scan" className={buttonVariants({ size: "sm" })}>
                   Scan now
                 </Link>
               ) : (
@@ -340,36 +345,7 @@ export default async function DashboardPage({
             }
           />
         )}
-      </section>
-
-      <InitialScanCard
-        connected={connected}
-        incremental={Boolean(gmailStatus.connection?.lastSuccessfulScanAt)}
-        latestScan={
-          latestScan
-            ? {
-                id: String(latestScan.id),
-                status: String(latestScan.status),
-                threads_discovered: Number(latestScan.threads_discovered ?? 0),
-                threads_checked: Number(latestScan.threads_checked ?? 0),
-                error_code: (latestScan.error_code as string | null | undefined) ?? null,
-                error_message: (latestScan.error_message as string | null | undefined) ?? null,
-              }
-            : null
-        }
-        lastRunAt={
-          latestStatus === "RUNNING"
-            ? null
-            : ((latestScan?.finished_at as string | null | undefined) ?? null)
-        }
-        lastRunStatus={latestStatus === "RUNNING" ? null : latestStatus}
-        messagesProcessed={
-          latestScan && latestStatus !== "RUNNING"
-            ? Number(latestScan.messages_processed ?? 0)
-            : null
-        }
-        nextScanAt={gmailStatus.connection?.nextScanAt}
-      />
+      </CollapsibleBlock>
 
       <DigestReportCard digest={latestDigest} variant="compact" />
 

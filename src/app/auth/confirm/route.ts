@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
 import { oauthErrorQuery, parseAuthOtpType, safeAuthNext } from "@/lib/auth/redirects";
+import { getOnboardingStepForUser } from "@/lib/onboarding/load";
 import { createClient } from "@/lib/supabase/server";
 
 const confirmQuerySchema = z.object({
@@ -42,6 +43,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(destination);
   }
 
+  let exchangedUserId: string | null = null;
+
   try {
     const supabase = await createClient();
     if (parsed.data.token_hash && otpType) {
@@ -53,15 +56,27 @@ export async function GET(request: NextRequest) {
         throw error;
       }
     } else if (parsed.data.code) {
-      const { error } = await supabase.auth.exchangeCodeForSession(parsed.data.code);
+      const { data, error } = await supabase.auth.exchangeCodeForSession(parsed.data.code);
       if (error) {
         throw error;
       }
+      exchangedUserId = data.user?.id ?? data.session?.user?.id ?? null;
     }
   } catch {
     destination.pathname = "/login";
     destination.searchParams.set("error", "auth_link");
     return NextResponse.redirect(destination);
+  }
+
+  if (destination.pathname === "/onboarding" && exchangedUserId) {
+    try {
+      const step = await getOnboardingStepForUser(exchangedUserId);
+      if (step === "complete") {
+        destination.pathname = "/dashboard";
+      }
+    } catch {
+      // Keep /onboarding if step resolution fails.
+    }
   }
 
   if (destination.pathname === "/login") {

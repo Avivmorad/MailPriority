@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { safeAppReturnPath } from "@/lib/auth/redirects";
-import { disconnectGmailForUser } from "@/lib/gmail/connections";
+import { disconnectGmailAndClearAnalysis, disconnectGmailForUser } from "@/lib/gmail/connections";
+import { createSupabaseDeletionPort, deleteAnalysisDataForUser } from "@/lib/privacy/deletion";
 import { getSessionUser } from "@/lib/supabase/auth";
 
 export async function POST(request: Request) {
@@ -25,7 +26,12 @@ export async function POST(request: Request) {
   }
 
   try {
-    await disconnectGmailForUser(user.id);
+    await disconnectGmailAndClearAnalysis(user.id, {
+      disconnect: disconnectGmailForUser,
+      purge: async (userId) => {
+        await deleteAnalysisDataForUser(userId, createSupabaseDeletionPort());
+      },
+    });
   } catch {
     const url = new URL(returnTo, origin);
     url.searchParams.set("gmail", "error");

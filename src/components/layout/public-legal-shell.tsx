@@ -21,7 +21,11 @@ export function PublicLegalShell({ children }: { children: ReactNode }) {
           <ThemeToggle />
         </div>
       </header>
-      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-3xl flex-1 px-6 py-10">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto w-full max-w-3xl flex-1 px-6 py-10 [overflow-wrap:anywhere]"
+      >
         {children}
       </main>
     </div>

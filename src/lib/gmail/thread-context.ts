@@ -73,28 +73,36 @@ export function buildThreadContext(
     };
   });
 
-  const blocks = mapped.map((message, index) => {
-    const lines = [
-      `[MESSAGE ${index + 1}]`,
-      `Direction: ${message.direction}`,
-      `From: ${message.from ?? ""}`,
-      `To: ${message.to ?? ""}`,
-      `Cc: ${message.cc ?? ""}`,
-      `Date: ${message.date ?? ""}`,
-      `Subject: ${message.subject ?? ""}`,
-      "",
-      message.body,
-    ];
-    if (message.attachmentsNote) {
-      lines.push("", message.attachmentsNote);
-    }
-    return lines.join("\n");
-  });
+  const blocksFor = (messages: ThreadMessageContext[]): string[] =>
+    messages.map((message, index) => {
+      const lines = [
+        `[MESSAGE ${index + 1}]`,
+        `Direction: ${message.direction}`,
+        `From: ${message.from ?? ""}`,
+        `To: ${message.to ?? ""}`,
+        `Cc: ${message.cc ?? ""}`,
+        `Date: ${message.date ?? ""}`,
+        `Subject: ${message.subject ?? ""}`,
+        "",
+        message.body,
+      ];
+      if (message.attachmentsNote) {
+        lines.push("", message.attachmentsNote);
+      }
+      return lines.join("\n");
+    });
 
-  let promptText = blocks.join("\n\n");
-  if (promptText.length > limits.MAX_THREAD_CHARS) {
-    promptText = `${promptText.slice(0, limits.MAX_THREAD_CHARS)}\n[truncated]`;
+  // Joining every message can exceed the cap (6 × 12k > 35k). Drop oldest
+  // blocks first so the newest mail stays in the prompt. Cutting the string
+  // from the front removed that newest mail and let post-processing treat an
+  // older message as the latest one.
+  let promptMessages = mapped;
+  let promptText = blocksFor(promptMessages).join("\n\n");
+  while (promptText.length > limits.MAX_THREAD_CHARS && promptMessages.length > 1) {
+    promptMessages = promptMessages.slice(1);
+    promptText = blocksFor(promptMessages).join("\n\n");
   }
+  promptText = truncate(promptText, limits.MAX_THREAD_CHARS);
 
   return { messages: mapped, promptText };
 }

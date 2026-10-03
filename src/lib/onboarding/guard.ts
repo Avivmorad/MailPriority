@@ -1,11 +1,5 @@
-import { redirect } from "next/navigation";
-
-import { getOnboardingStepForUser } from "@/lib/onboarding/load";
-
-/** Redirect incomplete setups to onboarding before Mail / Digests / Settings. */
-export async function requireOnboardingComplete(userId: string): Promise<void> {
-  const step = await getOnboardingStepForUser(userId);
-  if (step !== "complete") {
-    redirect("/onboarding");
-  }
-}
+/**
+ * App pages stay reachable during setup. Sign-in still lands on /onboarding,
+ * and that page sends finished setups to the dashboard.
+ */
+export async function requireOnboardingComplete(_userId: string): Promise<void> {}

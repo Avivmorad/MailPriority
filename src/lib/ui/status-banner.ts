@@ -53,7 +53,7 @@ export function appStatusBanner(input: {
         kind: "error",
         title: "Gmail quota paused this scan.",
         body: "Wait a minute and try a shorter lookback. Your existing summaries were kept.",
-        href: "/dashboard#scan",
+        href: "/scan",
         actionLabel: "Try a shorter lookback",
       };
     }
@@ -62,7 +62,7 @@ export function appStatusBanner(input: {
         kind: "error",
         title: "Email analysis is temporarily unavailable.",
         body: "Try again in a few minutes. Your existing summaries were kept.",
-        href: "/dashboard#scan",
+        href: "/scan",
         actionLabel: "Try again",
       };
     }
@@ -71,15 +71,15 @@ export function appStatusBanner(input: {
         kind: "info",
         title: "Scan stopped.",
         body: "Already-checked conversations were kept. You can start a new scan when you want.",
-        href: "/dashboard#scan",
+        href: "/scan",
         actionLabel: "Scan again",
       };
     }
     return {
       kind: "error",
       title: "The last scan failed.",
-      body: "Try Scan now on the dashboard. Your existing summaries were kept.",
-      href: "/dashboard#scan",
+      body: "Try Scan now on the Scan tab. Your existing summaries were kept.",
+      href: "/scan",
       actionLabel: "Scan again",
     };
   }
@@ -97,8 +97,8 @@ export function appStatusBanner(input: {
       kind: "info",
       title: "A scan is running.",
       body: "You can keep using MailPriority while it works.",
-      href: "/dashboard",
-      actionLabel: "View progress",
+      href: "/scan",
+      actionLabel: "Open scan",
     };
   }
   return null;

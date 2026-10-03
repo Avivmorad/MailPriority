@@ -1,4 +1,5 @@
 import { groundDeadline } from "@/lib/ai/deadlines";
+import { englishDisplayText } from "@/lib/ui/display-text";
 import {
   isEphemeralAuthNotice,
   isIgnoreFamilyNotice,
@@ -25,17 +26,17 @@ export interface TriagePreferences {
 }
 
 const ACTION_SUMMARY_FALLBACK: Record<ActionType, string> = {
-  reply: "השב למייל",
-  review: "בדוק את המייל",
-  approve: "אשר את הבקשה",
-  schedule: "תאם מועד",
-  submit: "הגש את הנדרש",
-  pay: "שלם את החיוב",
-  sign: "חתום על המסמך",
-  download: "הורד את הקובץ",
-  follow_up: "בצע מעקב",
-  other: "בצע את הפעולה הנדרשת",
-  none: "בצע את הפעולה הנדרשת",
+  reply: "Reply to this email",
+  review: "Review this email",
+  approve: "Approve the request",
+  schedule: "Confirm a time",
+  submit: "Submit what was requested",
+  pay: "Pay the charge",
+  sign: "Sign the document",
+  download: "Download the file",
+  follow_up: "Follow up",
+  other: "Take the required step",
+  none: "Take the required step",
 };
 
 const IMPORTANCE_RANK: Record<Importance, number> = {
@@ -272,7 +273,24 @@ export function postProcessThreadAnalysis(
     next.requires_action = false;
   }
 
+  applyEnglishActionCopy(next);
+
   return threadAnalysisSchema.parse(next);
+}
+
+/** Do and Why this tab are stored in English. Does not change status or action type. */
+function applyEnglishActionCopy(next: ThreadAnalysis): void {
+  const summary = englishDisplayText(next.action_summary);
+  const reason = englishDisplayText(next.action_reason);
+  next.action_reason = reason;
+  if (next.status === "action_required") {
+    next.action_summary = summary ?? reason ?? ACTION_SUMMARY_FALLBACK[next.action_type];
+  } else {
+    next.action_summary = summary;
+  }
+  if (!englishDisplayText(next.importance_reason)) {
+    next.importance_reason = "Needs a quick look";
+  }
 }
 
 export function assertThreadAnalysisInvariants(analysis: ThreadAnalysis): void {

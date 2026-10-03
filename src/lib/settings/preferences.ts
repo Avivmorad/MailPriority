@@ -1,8 +1,8 @@
 import { z } from "zod";
 
-import { normalizeEmail } from "@/lib/gmail/addresses";
 import { nextDailyScanAt } from "@/lib/scans/schedule";
-import { CUSTOM_AI_INSTRUCTIONS_MAX, TRIAGE_LIST_MAX } from "@/lib/settings/limits";
+import { CUSTOM_AI_INSTRUCTIONS_MAX } from "@/lib/settings/limits";
+import { triageDomainListSchema, triageSenderListSchema } from "@/lib/settings/triage-lists";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export { CUSTOM_AI_INSTRUCTIONS_MAX, TRIAGE_LIST_MAX } from "@/lib/settings/limits";
@@ -20,31 +20,6 @@ export function isValidTimeZone(timeZone: string): boolean {
   }
 }
 
-const senderSchema = z
-  .string()
-  .trim()
-  .min(3)
-  .max(320)
-  .transform((value) => normalizeEmail(value))
-  .refine((value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value), { message: "invalid_sender" });
-
-const domainSchema = z
-  .string()
-  .trim()
-  .max(253)
-  .transform((value) => value.replace(/^@/, "").toLowerCase())
-  .refine(
-    (value) => /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(value),
-    { message: "invalid_domain" },
-  );
-
-function uniqueStrings(values: string[]): string[] {
-  return [...new Set(values)];
-}
-
-const senderListSchema = z.array(senderSchema).max(TRIAGE_LIST_MAX).transform(uniqueStrings);
-const domainListSchema = z.array(domainSchema).max(TRIAGE_LIST_MAX).transform(uniqueStrings);
-
 export const patchScanPreferencesSchema = z
   .object({
     dailyScanTime: timeHmSchema.optional(),
@@ -54,9 +29,9 @@ export const patchScanPreferencesSchema = z
       .max(64)
       .refine(isValidTimeZone, { message: "invalid_timezone" })
       .optional(),
-    vipSenders: senderListSchema.optional(),
-    ignoredSenders: senderListSchema.optional(),
-    ignoredDomains: domainListSchema.optional(),
+    vipSenders: triageSenderListSchema.optional(),
+    ignoredSenders: triageSenderListSchema.optional(),
+    ignoredDomains: triageDomainListSchema.optional(),
     customAiInstructions: z.string().max(CUSTOM_AI_INSTRUCTIONS_MAX).optional(),
     digestEnabled: z.boolean().optional(),
   })

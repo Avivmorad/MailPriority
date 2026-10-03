@@ -6,23 +6,24 @@ import { SkipToContent } from "@/components/layout/skip-to-content";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 const questions = [
+  {
+    icon: ListChecks,
+    title: "Actions",
+    body: "Needs a next step from you — reply, review, pay — ranked by urgency and deadline.",
+  },
+  {
+    icon: Clock3,
+    title: "Pending",
+    body: "You already acted. The next move is on someone else.",
+  },
   {
     icon: Inbox,
     title: "For You",
     body: "Useful updates, not receipts, OTPs, or marketing.",
-  },
-  {
-    icon: ListChecks,
-    title: "Actions",
-    body: "Actions with a next step — reply, review, pay — ranked by urgency and deadline.",
-  },
-  {
-    icon: Clock3,
-    title: "What's pending?",
-    body: "Threads where you already acted and the next move is on someone else.",
   },
 ];
 
@@ -40,7 +41,7 @@ const features = [
   {
     icon: Tag,
     title: "Gmail labels, in sync",
-    body: "Applies managed MailPilot/ labels back to Gmail so your triage is visible everywhere — without touching your own labels.",
+    body: "Applies managed Gmail labels under the MailPriority/ prefix so your triage is visible everywhere — without touching your own labels.",
   },
   {
     icon: Clock3,
@@ -55,101 +56,126 @@ const features = [
   {
     icon: Inbox,
     title: "Idempotent by design",
-    body: "Re-scanning the same mail never creates duplicate messages, actions, digests, or labels.",
+    body: "Re-scanning the same mail never creates duplicate messages, actions, History entries, or labels.",
   },
 ];
 
-const previewColumns = [
+const heroPreview = [
   {
     tab: "Actions",
-    accent: "border-l-orange-500",
-    hint: "Needs a next step from you",
-    items: [
-      {
-        title: "University registration",
-        meta: "Registrar · Due 12 Sep",
-        body: "Do: Choose courses and submit registration before the deadline.",
-      },
-      {
-        title: "Security alert: new Windows login",
-        meta: "Google · Urgent",
-        body: "Do: Confirm the sign-in was yours, or secure the account.",
-      },
-    ],
+    accent: "border-l-urgency-medium",
+    title: "University registration",
+    meta: "Registrar · Due 12 Sep",
+    body: "Do: Choose courses and submit registration before the deadline.",
   },
   {
     tab: "Pending",
-    accent: "border-l-sky-500",
-    hint: "You already acted",
-    items: [
-      {
-        title: "Question sent to the hotel",
-        meta: "Booking.com · Pending on the hotel",
-        body: "They confirmed your smart-TV question was forwarded. Nothing for you until they reply.",
-      },
-    ],
+    accent: "border-l-urgency-unknown",
+    title: "Question sent to the hotel",
+    meta: "Booking.com · Pending on the hotel",
+    body: "They confirmed your smart-TV question was forwarded. Nothing for you until they reply.",
   },
   {
     tab: "For You",
-    accent: "border-l-zinc-400",
-    hint: "Useful to know, not a task",
-    items: [
-      {
-        title: "Weekly product changelog",
-        meta: "Linear · For You",
-        body: "Shipped: placement reasons, undo, and a change-focused dashboard.",
-      },
-    ],
+    accent: "border-l-urgency-none",
+    title: "Weekly product changelog",
+    meta: "Linear · For You",
+    body: "Shipped: placement reasons, undo, and a change-focused dashboard.",
+  },
+] as const;
+
+const walkthroughSteps = [
+  {
+    step: "1",
+    tab: "Actions",
+    accent: "border-l-urgency-medium",
+    title: "It starts as an Action",
+    body: "University registration lands in Actions with a deadline and a clear next step.",
+  },
+  {
+    step: "2",
+    tab: "Pending",
+    accent: "border-l-urgency-unknown",
+    title: "After you act, it moves",
+    body: "Once you submit or reply, the same thread shifts to Pending — waiting on someone else.",
+  },
+  {
+    step: "3",
+    tab: "For You",
+    accent: "border-l-urgency-none",
+    title: "Useful mail stays separate",
+    body: "Changelogs and FYIs land in For You. They never compete with work that still needs you.",
   },
 ] as const;
 
 export default function Home() {
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="flex min-h-full flex-col overflow-x-hidden">
       <SkipToContent />
-      <header className="border-border/60 border-b">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
+      <header className="border-border/60 bg-background/90 sticky top-0 z-40 border-b backdrop-blur-md">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
           <Link
             href="/"
             aria-label="MailPriority home"
-            className="focus-visible:ring-ring rounded-lg focus-visible:ring-3 focus-visible:outline-none"
+            className="focus-visible:ring-ring min-w-0 shrink rounded-lg focus-visible:ring-3 focus-visible:outline-none"
           >
             <Logo />
           </Link>
-          <nav aria-label="Landing" className="flex items-center gap-2">
-            <a href="#preview" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+          <nav aria-label="Landing" className="flex shrink-0 items-center gap-1 sm:gap-2">
+            <a
+              href="#preview"
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "sm" }),
+                "hidden sm:inline-flex",
+              )}
+            >
               Example
             </a>
-            <a href="#features" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+            <a
+              href="#features"
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "sm" }),
+                "hidden sm:inline-flex",
+              )}
+            >
               Features
             </a>
-            <ThemeToggle />
-            <a href="/login" className={buttonVariants({ size: "sm" })}>
+            <ThemeToggle className="size-10 sm:size-8" />
+            <a
+              href="/login"
+              className={cn(buttonVariants({ size: "sm" }), "min-h-10 px-3 sm:min-h-8")}
+            >
               Sign in
             </a>
           </nav>
         </div>
       </header>
 
-      <main id="main-content" tabIndex={-1} className="flex-1">
-        <section className="border-border/60 relative overflow-hidden border-b bg-[radial-gradient(circle_at_80%_15%,var(--accent),transparent_38%)]">
-          <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-6 py-16 lg:grid-cols-[.9fr_1.1fr] lg:py-24">
-            <div>
-              <Badge variant="secondary" className="mb-6">
+      <main id="main-content" tabIndex={-1} className="flex-1 overflow-x-hidden">
+        <section className="border-border/60 relative overflow-hidden border-b bg-[radial-gradient(circle_at_80%_15%,var(--accent),transparent_42%)]">
+          <div className="mx-auto grid w-full max-w-6xl items-center gap-10 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-[.9fr_1.1fr] lg:gap-12 lg:py-24">
+            <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-500">
+              <Badge variant="secondary" className="mb-5 sm:mb-6">
                 A clearer way to handle Gmail
               </Badge>
-              <h1 className="text-foreground max-w-xl text-5xl leading-[1.07] font-semibold tracking-[-.05em] text-balance sm:text-6xl">
+              <h1 className="text-foreground max-w-xl text-4xl leading-[1.08] font-semibold tracking-[-.04em] text-balance sm:text-5xl sm:tracking-[-.05em] lg:text-6xl">
                 Your inbox, <span className="text-primary">under control.</span>
               </h1>
-              <p className="text-muted-foreground mt-6 max-w-lg text-lg leading-relaxed text-pretty">
+              <p className="text-muted-foreground mt-5 max-w-lg text-base leading-relaxed text-pretty sm:mt-6 sm:text-lg">
                 MailPriority turns busy email threads into a short list of Actions, Pending, and For
                 You.
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <a href="/login" className={buttonVariants({ size: "lg" })}>
+              <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
+                <a href="/login" className={cn(buttonVariants({ size: "lg" }), "w-full sm:w-auto")}>
                   Get started with Gmail <ArrowRight className="size-4" />
                 </a>
-                <a href="#preview" className={buttonVariants({ variant: "outline", size: "lg" })}>
+                <a
+                  href="#preview"
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "lg" }),
+                    "w-full sm:w-auto",
+                  )}
+                >
                   See an example
                 </a>
               </div>
@@ -157,7 +183,7 @@ export default function Home() {
                 No automatic sending or deleting emails.
               </p>
             </div>
-            <div className="border-border bg-card shadow-primary/10 overflow-hidden rounded-2xl border shadow-2xl">
+            <div className="border-border bg-card motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 overflow-hidden rounded-2xl border shadow-sm motion-safe:duration-700">
               <div className="border-border flex items-center justify-between border-b px-5 py-4">
                 <span className="text-sm font-semibold">Your daily overview</span>
                 <span className="text-muted-foreground text-xs">Example inbox</span>
@@ -174,18 +200,28 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-              <div className="space-y-3 p-4">
-                {previewColumns.map((column) => (
+              <div className="space-y-3 p-4" aria-hidden="true">
+                {heroPreview.map((item) => (
                   <div
-                    key={column.tab}
-                    className={`border-border rounded-xl border border-l-4 ${column.accent} bg-background p-4`}
+                    key={item.tab}
+                    className={`border-border rounded-xl border border-l-4 ${item.accent} bg-background p-4`}
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <h2 className="text-sm font-semibold">{column.items[0].title}</h2>
-                      <span className="text-muted-foreground shrink-0 text-xs">{column.tab}</span>
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-muted-foreground text-xs">{item.tab}</span>
+                      <span className="text-muted-foreground shrink-0 text-xs">{item.meta}</span>
                     </div>
-                    <p className="text-muted-foreground mt-1 text-xs">{column.items[0].meta}</p>
-                    <p className="text-muted-foreground mt-2 text-sm">{column.items[0].body}</p>
+                    <p className="mt-2 text-center text-sm font-semibold" dir="auto">
+                      {item.title}
+                    </p>
+                    <p className="text-muted-foreground mt-2 text-start text-sm">{item.body}</p>
+                    <span
+                      className={cn(
+                        buttonVariants({ size: "sm" }),
+                        "mt-3 min-h-10 w-full px-4 sm:w-auto",
+                      )}
+                    >
+                      Open
+                    </span>
                   </div>
                 ))}
               </div>
@@ -194,51 +230,41 @@ export default function Home() {
         </section>
 
         <section id="preview" className="border-border/60 bg-muted/30 border-y">
-          <div className="mx-auto w-full max-w-6xl px-6 py-12">
-            <div className="mb-8 text-center">
+          <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
+            <div className="mb-8 max-w-2xl">
               <h2 className="text-foreground text-2xl font-bold tracking-tight">
-                How a morning inbox looks
+                One thread, from Action to Pending
               </h2>
-              <p className="text-muted-foreground mt-2">
-                After a scan, MailPriority does not dump 32 emails into one list. It keeps tasks,
-                pending, and For You apart.
+              <p className="text-muted-foreground mt-2 text-pretty">
+                After a scan, MailPriority does not dump dozens of emails into one list. A task
+                moves as the conversation does.
               </p>
             </div>
-            <div className="grid gap-4 lg:grid-cols-3">
-              {previewColumns.map((column) => (
-                <Card key={column.tab} className={`border-l-4 ${column.accent}`}>
-                  <CardHeader>
-                    <CardTitle>{column.tab}</CardTitle>
-                    <CardDescription>{column.hint}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {column.items.map((item) => (
-                      <article
-                        key={item.title}
-                        className="bg-background/80 ring-foreground/10 rounded-lg p-3 ring-1"
-                      >
-                        <h3 className="text-foreground text-sm font-semibold tracking-tight">
-                          {item.title}
-                        </h3>
-                        <p className="text-muted-foreground mt-0.5 text-xs">{item.meta}</p>
-                        <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-                          {item.body}
-                        </p>
-                      </article>
-                    ))}
-                  </CardContent>
-                </Card>
+            <ol className="grid gap-4 lg:grid-cols-3">
+              {walkthroughSteps.map((step) => (
+                <li
+                  key={step.step}
+                  className={`border-border bg-card rounded-xl border border-l-4 ${step.accent} p-5 shadow-xs`}
+                >
+                  <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                    Step {step.step} · {step.tab}
+                  </p>
+                  <p className="text-foreground mt-2 text-base font-semibold tracking-tight">
+                    {step.title}
+                  </p>
+                  <p className="text-muted-foreground mt-2 text-sm leading-relaxed">{step.body}</p>
+                </li>
               ))}
-            </div>
+            </ol>
           </div>
         </section>
 
-        <section className="mx-auto w-full max-w-6xl px-6 py-16">
+        <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
           <div className="grid gap-4 sm:grid-cols-3">
             {questions.map(({ icon: Icon, title, body }) => (
               <Card key={title}>
                 <CardHeader>
-                  <div className="bg-primary/10 text-primary mb-2 flex size-10 items-center justify-center rounded-lg">
+                  <div className="bg-accent text-primary mb-2 flex size-10 items-center justify-center rounded-lg">
                     <Icon className="size-5" aria-hidden />
                   </div>
                   <CardTitle>{title}</CardTitle>
@@ -249,18 +275,18 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="features" className="mx-auto w-full max-w-6xl px-6 pb-16">
+        <section id="features" className="mx-auto w-full max-w-6xl px-4 pb-16 sm:px-6">
           <div className="mb-8 text-center">
             <h2 className="text-foreground text-2xl font-bold tracking-tight">What it does</h2>
             <p className="text-muted-foreground mt-2">
-              The product principles that shape every part of the build.
+              How MailPriority turns Gmail into a short daily list.
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {features.map(({ icon: Icon, title, body }) => (
               <Card key={title}>
                 <CardHeader>
-                  <div className="bg-primary/10 text-primary mb-2 flex size-10 items-center justify-center rounded-lg">
+                  <div className="bg-accent text-primary mb-2 flex size-10 items-center justify-center rounded-lg">
                     <Icon className="size-5" aria-hidden />
                   </div>
                   <CardTitle className="text-base">{title}</CardTitle>

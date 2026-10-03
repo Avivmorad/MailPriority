@@ -594,7 +594,7 @@ describe("scan integration", () => {
     expect(bob.actions.size).toBe(0);
   });
 
-  it("reuses already-created MailPilot labels instead of creating duplicates", async () => {
+  it("reuses already-created managed labels instead of creating duplicates", async () => {
     const store = createMemoryStore("user-1", "conn-1");
     const mailbox = createMailbox([message()]);
     await mailbox.loadLabelMap();

@@ -20,7 +20,7 @@ import { createClient } from "@/lib/supabase/client";
 type Mode = "signin" | "signup" | "forgot";
 
 const inputClassName =
-  "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
+  "w-full min-h-11 rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none transition-[border-color,box-shadow] duration-150 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
 const QUERY_NOTICES: Record<string, string> = {
   confirmed: "Email confirmed. You can sign in now.",
@@ -81,11 +81,14 @@ function LoginShell({ children }: { children?: ReactNode }) {
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const redirectedFrom = searchParams.get("redirectedFrom");
+  const hasAppReturn = Boolean(redirectedFrom && redirectedFrom.startsWith("/"));
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [pendingAction, setPendingAction] = useState<"form" | "google" | null>(null);
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(
     QUERY_ERRORS[searchParams.get("error") ?? ""] ?? null,
@@ -110,7 +113,9 @@ function LoginForm() {
       return;
     }
 
+    setPendingAction("form");
     setLoading(true);
+    let leavePending = false;
 
     try {
       const supabase = createClient();
@@ -134,6 +139,7 @@ function LoginForm() {
         const next = safeAppReturnPath(searchParams.get("redirectedFrom"), "/onboarding");
         router.push(next);
         router.refresh();
+        leavePending = true;
         return;
       }
 
@@ -147,7 +153,10 @@ function LoginForm() {
     } catch (err) {
       setError(authUserMessage(err));
     } finally {
-      setLoading(false);
+      if (!leavePending) {
+        setPendingAction(null);
+        setLoading(false);
+      }
     }
   }
 
@@ -160,6 +169,7 @@ function LoginForm() {
     setError(null);
     setNotice(null);
     setFieldError(null);
+    setPendingAction("google");
     setLoading(true);
 
     try {
@@ -175,6 +185,7 @@ function LoginForm() {
       }
     } catch (err) {
       googleSignInStarted.current = false;
+      setPendingAction(null);
       setError(authUserMessage(err));
       setLoading(false);
     }
@@ -195,7 +206,9 @@ function LoginForm() {
           </CardTitle>
           <CardDescription>
             {mode === "signin"
-              ? "Welcome back. Sign in to your MailPriority account."
+              ? hasAppReturn
+                ? "Sign in to open your inbox triage."
+                : "Welcome back. Sign in to your MailPriority account."
               : mode === "signup"
                 ? "Sign up to start triaging your inbox."
                 : "We will email a reset link if that address has an account."}
@@ -207,6 +220,7 @@ function LoginForm() {
               <Button
                 type="button"
                 variant="outline"
+                size="lg"
                 className="w-full"
                 disabled={loading}
                 aria-busy={loading}
@@ -215,7 +229,7 @@ function LoginForm() {
                 }}
               >
                 <GoogleMark />
-                Continue with Google
+                {loading && pendingAction === "google" ? "Signing in…" : "Continue with Google"}
               </Button>
               <p className="text-muted-foreground flex items-center gap-3 text-xs">
                 <span className="bg-border h-px flex-1" aria-hidden="true" />
@@ -268,7 +282,7 @@ function LoginForm() {
                 />
                 <button
                   type="button"
-                  className="text-foreground text-sm font-medium underline underline-offset-4"
+                  className="text-foreground inline-flex min-h-10 items-center text-sm font-medium underline underline-offset-4"
                   aria-pressed={showPassword}
                   aria-controls="password"
                   onClick={() => setShowPassword((value) => !value)}
@@ -284,14 +298,22 @@ function LoginForm() {
               </p>
             ) : null}
             {notice ? (
-              <p className="text-sm text-emerald-700 dark:text-emerald-400" role="status">
+              <p className="text-urgency-low text-sm" role="status">
                 {notice}
               </p>
             ) : null}
 
-            <Button type="submit" className="w-full" disabled={loading} aria-busy={loading}>
-              {loading
-                ? "Please wait…"
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full"
+              disabled={loading}
+              aria-busy={loading}
+            >
+              {loading && pendingAction === "form"
+                ? mode === "signin"
+                  ? "Signing in…"
+                  : "Please wait…"
                 : mode === "signin"
                   ? "Sign in"
                   : mode === "signup"
@@ -317,23 +339,9 @@ function LoginForm() {
             </p>
           ) : null}
 
-          <p className="text-muted-foreground mt-4 text-center text-sm">
-            {mode === "signup" ? "Already have an account? " : "Don't have an account? "}
-            <button
-              type="button"
-              className="text-foreground font-medium underline underline-offset-4"
-              onClick={() => {
-                setMode(mode === "signup" ? "signin" : "signup");
-                setError(null);
-                setNotice(null);
-                setFieldError(null);
-              }}
-            >
-              {mode === "signup" ? "Sign in" : "Sign up"}
-            </button>
-            {mode === "forgot" ? (
-              <>
-                <span aria-hidden="true"> · </span>
+          {mode === "forgot" ? (
+            <div className="mt-4 space-y-2 text-center text-sm">
+              <p>
                 <button
                   type="button"
                   className="text-foreground font-medium underline underline-offset-4"
@@ -345,9 +353,40 @@ function LoginForm() {
                 >
                   Back to sign in
                 </button>
-              </>
-            ) : null}
-          </p>
+              </p>
+              <p className="text-muted-foreground">
+                {"Don't have an account? "}
+                <button
+                  type="button"
+                  className="text-foreground font-medium underline underline-offset-4"
+                  onClick={() => {
+                    setMode("signup");
+                    setError(null);
+                    setNotice(null);
+                    setFieldError(null);
+                  }}
+                >
+                  Sign up
+                </button>
+              </p>
+            </div>
+          ) : (
+            <p className="text-muted-foreground mt-4 text-center text-sm">
+              {mode === "signup" ? "Already have an account? " : "Don't have an account? "}
+              <button
+                type="button"
+                className="text-foreground font-medium underline underline-offset-4"
+                onClick={() => {
+                  setMode(mode === "signup" ? "signin" : "signup");
+                  setError(null);
+                  setNotice(null);
+                  setFieldError(null);
+                }}
+              >
+                {mode === "signup" ? "Sign in" : "Sign up"}
+              </button>
+            </p>
+          )}
         </CardContent>
       </Card>
     </LoginShell>

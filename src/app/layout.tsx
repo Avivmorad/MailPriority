@@ -17,9 +17,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning className="h-full antialiased">
-      <body className="flex min-h-full flex-col">
+    // Do not put a React `className` on `<html>`. Hydration replaces that
+    // attribute wholesale and would wipe the `dark` class set by the bootstrap
+    // script (sudden light/dark flip). Height/antialias live in CSS / body.
+    <html lang="en" suppressHydrationWarning>
+      <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
+      <body className="flex min-h-full flex-col">
         <ThemeSync />
         {children}
         <Analytics />

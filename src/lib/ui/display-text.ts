@@ -17,6 +17,32 @@ export function usableDisplayText(value: string | null | undefined): string | nu
   return trimmed;
 }
 
+/**
+ * Do and Why this tab must be English. Latin letters (including accents in
+ * names) are allowed. Hebrew and any other non-Latin script is not.
+ */
+export function isEnglishDisplayText(value: string | null | undefined): boolean {
+  const usable = usableDisplayText(value);
+  if (!usable) {
+    return false;
+  }
+  for (const char of usable) {
+    if (/\p{L}/u.test(char) && !/\p{Script=Latin}/u.test(char)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/** Usable text that is safe to show on an English Do or Why this tab line. */
+export function englishDisplayText(value: string | null | undefined): string | null {
+  const usable = usableDisplayText(value);
+  if (!usable || !isEnglishDisplayText(usable)) {
+    return null;
+  }
+  return usable;
+}
+
 export function displayThreadTitle(...candidates: Array<string | null | undefined>): string {
   for (const candidate of candidates) {
     const usable = usableDisplayText(candidate);

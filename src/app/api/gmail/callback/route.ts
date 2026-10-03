@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { safeAppReturnPath } from "@/lib/auth/redirects";
@@ -54,8 +54,10 @@ export async function GET(request: Request) {
     return NextResponse.redirect(gmailCallbackErrorRedirect(origin, "missing_code", returnTo));
   }
 
+  let runPostConnectSetup: (() => Promise<void>) | null = null;
   try {
-    await completeGmailOAuth(user.id, code);
+    const result = await completeGmailOAuth(user.id, code);
+    runPostConnectSetup = result.runPostConnectSetup;
   } catch (err) {
     if (err instanceof GmailConnectError) {
       return NextResponse.redirect(gmailCallbackErrorRedirect(origin, err.reason, returnTo));
@@ -67,6 +69,14 @@ export async function GET(request: Request) {
       );
     }
     return NextResponse.redirect(gmailCallbackErrorRedirect(origin, "connect_failed", returnTo));
+  }
+
+  // Labels + initial next_scan_at are not required to land in the app.
+  // Run them after the redirect so Google → /api/gmail/callback feels fast.
+  if (runPostConnectSetup) {
+    after(async () => {
+      await runPostConnectSetup();
+    });
   }
 
   const success = new URL(returnTo, origin);

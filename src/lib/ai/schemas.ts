@@ -121,13 +121,24 @@ export const threadAnalysisJsonSchema = {
   properties: {
     summary: { type: "string" },
     importance: { type: "string", enum: [...IMPORTANCE_VALUES] },
-    importance_reason: { type: "string" },
+    importance_reason: {
+      type: "string",
+      description: "English reason for importance and tab placement. Never the email's language.",
+    },
     status: { type: "string", enum: [...THREAD_STATUS_VALUES] },
     requires_action: { type: "boolean" },
     requires_reply: { type: "boolean" },
     action_type: { type: "string", enum: [...ACTION_TYPE_VALUES] },
-    action_summary: { type: ["string", "null"] },
-    action_reason: { type: ["string", "null"] },
+    action_summary: {
+      type: ["string", "null"],
+      description:
+        "English Do line: the next step, or null. English even when the email is in another language.",
+    },
+    action_reason: {
+      type: ["string", "null"],
+      description:
+        "English Why this tab line, or null. English even when the email is in another language.",
+    },
     waiting_for: { type: ["string", "null"] },
     waiting_since: { type: ["string", "null"] },
     urgency: { type: "string", enum: [...URGENCY_VALUES] },

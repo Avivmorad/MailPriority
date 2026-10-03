@@ -4,6 +4,20 @@ import type { NextConfig } from "next";
 import { sentryInstrumentationTurbopackRules } from "./src/lib/observability/sentry-turbopack-rules.mjs";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: "/digests",
+        destination: "/history",
+        permanent: true,
+      },
+      {
+        source: "/digests/:path*",
+        destination: "/history/:path*",
+        permanent: true,
+      },
+    ];
+  },
   // Pin the workspace root so Turbopack doesn't get confused by unrelated
   // lockfiles that may exist in parent directories.
   // Own Sentry's instrumentation matchers so Turbopack does not require

@@ -20,6 +20,8 @@ export interface FeedbackCorrection {
   };
   actionStatus: ActionStatus | null;
   clearWaitingFor?: boolean;
+  /** Drop the workflow row so the thread is not also listed under Closed. */
+  removeAction?: boolean;
 }
 
 export function correctionFromFeedback(
@@ -58,6 +60,13 @@ export function correctionFromFeedback(
         thread: { status: "action_required", requiresAction: true },
         actionStatus: "OPEN",
         clearWaitingFor: true,
+      };
+    case "ignore":
+      return {
+        applied: true,
+        thread: { status: "ignore", requiresAction: false },
+        actionStatus: null,
+        removeAction: true,
       };
     case "wrong":
       return { applied: false, thread: {}, actionStatus: current.actionStatus };

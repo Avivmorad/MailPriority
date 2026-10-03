@@ -1,20 +1,21 @@
+import { cache } from "react";
+
 import { getGmailEnv, isGmailConfigured } from "@/lib/config/env";
 import {
   type GmailConnectionPublic,
   type GmailConnectionStatus,
   type GmailStatusPayload,
 } from "@/lib/gmail/constants";
-import { ensureManagedLabels } from "@/lib/gmail/labels";
 import {
   exchangeAuthorizationCode,
   fetchGmailIdentity,
   GmailConnectError,
   revokeRefreshToken,
 } from "@/lib/gmail/oauth";
+import { runGmailPostConnectSetup } from "@/lib/gmail/post-connect";
+import { GMAIL_CONNECT_RETRY_DELAYS_MS } from "@/lib/gmail/retry";
 import { unwrapSecretWithRotation, encryptSecret } from "@/lib/security/encryption";
 import { cancelActiveJobsForConnection } from "@/lib/scans/jobs";
-import { nextDailyScanAt } from "@/lib/scans/schedule";
-import { getScanPreferences } from "@/lib/settings/preferences";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { emitProductEvent } from "@/lib/observability/events";
 
@@ -116,7 +117,7 @@ export function gmailStatusErrorMessage(error: {
   return "Could not load Gmail connection status from the database.";
 }
 
-export async function getGmailStatusForUser(userId: string): Promise<GmailStatusPayload> {
+export const getGmailStatusForUser = cache(async (userId: string): Promise<GmailStatusPayload> => {
   const configured = isGmailConfigured();
   if (!configured) {
     return { configured: false, connection: null, loadError: null };
@@ -160,15 +161,42 @@ export async function getGmailStatusForUser(userId: string): Promise<GmailStatus
       loadError: "Could not load Gmail connection status from the database.",
     };
   }
+});
+
+export interface CompleteGmailOAuthResult {
+  connection: GmailConnectionPublic;
+  /**
+   * Label ensure + initial next_scan_at. Run after the OAuth redirect so the
+   * browser is not blocked on Gmail label RPCs. Idempotent; scans also reconcile.
+   */
+  runPostConnectSetup: () => Promise<void>;
 }
 
 export async function completeGmailOAuth(
   userId: string,
   code: string,
-): Promise<GmailConnectionPublic> {
+): Promise<CompleteGmailOAuthResult> {
   const env = getGmailEnv();
-  const tokens = await exchangeAuthorizationCode(code);
-  const identity = await fetchGmailIdentity(tokens.accessToken, tokens.refreshToken);
+  const db = createAdminClient();
+
+  // Token exchange is required before redirect; profile upsert is independent.
+  const [tokens, profileResult] = await Promise.all([
+    exchangeAuthorizationCode(code),
+    db.from("profiles").upsert({ id: userId }, { onConflict: "id" }),
+  ]);
+  if (profileResult.error) {
+    emitProductEvent({
+      type: "gmail.connect_failed",
+      step: "profile",
+      errorCode: profileResult.error.code ?? "persist",
+    });
+    throw new GmailConnectError("persist", "Failed to persist profile for Gmail connection");
+  }
+
+  // Interactive connect uses empty retry delays so a Gmail 429 fails fast.
+  const identity = await fetchGmailIdentity(tokens.accessToken, tokens.refreshToken, {
+    delaysMs: GMAIL_CONNECT_RETRY_DELAYS_MS,
+  });
 
   let encryptedRefreshToken: string;
   try {
@@ -180,20 +208,7 @@ export async function completeGmailOAuth(
     );
   }
 
-  const db = createAdminClient();
-  const { error: profileError } = await db
-    .from("profiles")
-    .upsert({ id: userId }, { onConflict: "id" });
-  if (profileError) {
-    emitProductEvent({
-      type: "gmail.connect_failed",
-      step: "profile",
-      errorCode: profileError.code ?? "persist",
-    });
-    throw new GmailConnectError("persist", "Failed to persist profile for Gmail connection");
-  }
-
-  const { data: emailClaims, error: emailClaimError } = await db
+  const emailClaimQuery = db
     .from("gmail_connections")
     .select("user_id, gmail_email, google_account_id, status")
     .neq("status", "DISCONNECTED")
@@ -208,7 +223,12 @@ export async function completeGmailOAuth(
           .neq("status", "DISCONNECTED")
           .eq("google_account_id", identity.googleAccountId);
 
-  const { data: googleClaims, error: googleClaimError } = await googleAccountQuery;
+  const [emailClaimResult, googleClaimResult] = await Promise.all([
+    emailClaimQuery,
+    googleAccountQuery,
+  ]);
+  const { data: emailClaims, error: emailClaimError } = emailClaimResult;
+  const { data: googleClaims, error: googleClaimError } = googleClaimResult;
 
   if (emailClaimError || googleClaimError) {
     emitProductEvent({
@@ -273,34 +293,30 @@ export async function completeGmailOAuth(
 
   const row = data as ConnectionRow;
 
-  if (!row.next_scan_at) {
-    try {
-      const preferences = await getScanPreferences(userId);
-      const nextScanAt = nextDailyScanAt(
-        new Date(),
-        preferences.dailyScanTime,
-        preferences.timezone,
-      ).toISOString();
-      const { error: scheduleError } = await db
-        .from("gmail_connections")
-        .update({ next_scan_at: nextScanAt })
-        .eq("id", row.id);
-      if (!scheduleError) {
-        row.next_scan_at = nextScanAt;
-      }
-    } catch {
-      // Connection is valid; the next successful scan will set next_scan_at.
-    }
-  }
-
-  try {
-    await ensureManagedLabels(row.id, tokens.accessToken, tokens.refreshToken);
-  } catch {
-    // Connection is still valid; labels can be reconciled on the next scan.
-  }
-
   emitProductEvent({ type: "gmail.connected", connectionId: row.id });
-  return toPublicConnection(row);
+  return {
+    connection: toPublicConnection(row),
+    runPostConnectSetup: () =>
+      runGmailPostConnectSetup({
+        userId,
+        connectionId: row.id,
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        nextScanAt: row.next_scan_at,
+      }),
+  };
+}
+
+/** Disconnect, then delete stored threads, actions, History, and scan rows. */
+export async function disconnectGmailAndClearAnalysis(
+  userId: string,
+  deps: {
+    disconnect: (userId: string) => Promise<void>;
+    purge: (userId: string) => Promise<void>;
+  },
+): Promise<void> {
+  await deps.disconnect(userId);
+  await deps.purge(userId);
 }
 
 export async function disconnectGmailForUser(userId: string): Promise<void> {

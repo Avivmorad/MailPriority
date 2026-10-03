@@ -7,6 +7,7 @@ import {
   displayUrgencyForDeadline,
   formatDate,
   formatDateTime,
+  formatScanWindow,
   formatRelativeTime,
   isDeadlineOverdue,
 } from "@/lib/ui/format";
@@ -27,6 +28,14 @@ describe("formatDate", () => {
 
   it("returns an em dash when missing", () => {
     expect(formatDate(null)).toBe("—");
+  });
+});
+
+describe("formatScanWindow", () => {
+  it("writes the lookback as uppercase day and month", () => {
+    const now = new Date("2026-11-03T12:00:00.000Z");
+    expect(formatScanWindow(30, now)).toBe("4 OCT - 3 NOV");
+    expect(formatScanWindow(7, now)).toBe("27 OCT - 3 NOV");
   });
 });
 
@@ -70,10 +79,10 @@ describe("deadlineProximity", () => {
     expect(displayUrgencyForDeadline(null, "urgent", jerusalemAfternoon)).toBe("urgent");
   });
 
-  it("colors expired red, soon orange, and later light blue", () => {
-    expect(classForDeadline("2026-09-09", jerusalemAfternoon)).toContain("text-red-600");
-    expect(classForDeadline("2026-09-12", jerusalemAfternoon)).toContain("text-orange-600");
-    expect(classForDeadline("2026-09-20", jerusalemAfternoon)).toContain("text-sky-600");
+  it("colors expired high, soon medium, and later low", () => {
+    expect(classForDeadline("2026-09-09", jerusalemAfternoon)).toContain("text-urgency-high");
+    expect(classForDeadline("2026-09-12", jerusalemAfternoon)).toContain("text-urgency-medium");
+    expect(classForDeadline("2026-09-20", jerusalemAfternoon)).toContain("text-urgency-low");
   });
 });
 

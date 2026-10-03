@@ -9,7 +9,7 @@ import {
 
 describe("collapsed state", () => {
   it("builds a namespaced storage key", () => {
-    expect(collapsedStorageKey("open-tasks")).toBe("mailpilot.collapsed.open-tasks");
+    expect(collapsedStorageKey("open-tasks")).toBe("mailpilot.collapsed.v2.open-tasks");
   });
 
   it("parses a JSON string list and ignores junk", () => {

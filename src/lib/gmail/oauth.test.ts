@@ -4,14 +4,15 @@ import { MAILPILOT_LABELS } from "@/lib/gmail/constants";
 import { isValidOAuthState } from "@/lib/gmail/oauth";
 
 describe("MAILPILOT_LABELS", () => {
-  it("uses the product MailPilot/ namespace", () => {
+  it("uses the MailPriority/ Gmail namespace", () => {
     const names = MAILPILOT_LABELS.map((label) => label.gmailLabelName);
     expect(names).toEqual([
-      "MailPilot/Important",
-      "MailPilot/Action Required",
-      "MailPilot/Low Priority",
-      "MailPilot/Processed",
+      "MailPriority/Important",
+      "MailPriority/Action Required",
+      "MailPriority/Low Priority",
+      "MailPriority/Processed",
     ]);
+    expect(names.some((name) => name.startsWith("MailPilot/"))).toBe(false);
   });
 
   it("has unique logical names", () => {

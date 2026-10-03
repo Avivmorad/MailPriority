@@ -1,6 +1,9 @@
 import { z } from "zod";
 
+import type { Category } from "@/lib/ai/categories";
+import type { Importance } from "@/lib/ai/schemas";
 import type { ActionStatus } from "@/lib/actions/reconcile-action";
+import type { MailSignal } from "@/lib/mail/filters";
 
 export const MAIL_TABS = [
   { id: "summary", label: "For You" },
@@ -28,6 +31,30 @@ const ACTION_MAIL_TABS: Record<Exclude<MailTab, "summary" | "ignored">, ActionSt
   completed: "COMPLETED",
   snoozed: "SNOOZED",
 };
+
+export function mailViewPath(input: {
+  tab: MailTab;
+  category?: Category | null;
+  priority?: Importance | null;
+  signal?: MailSignal | null;
+  uncertain?: boolean;
+}): string {
+  const params = new URLSearchParams();
+  params.set("tab", input.tab);
+  if (input.category) {
+    params.set("category", input.category);
+  }
+  if (input.priority) {
+    params.set("priority", input.priority);
+  }
+  if (input.signal) {
+    params.set("signal", input.signal);
+  }
+  if (input.uncertain) {
+    params.set("uncertain", "1");
+  }
+  return `/mail?${params.toString()}`;
+}
 
 export function parseMailTab(value: string | null | undefined): MailTab {
   const parsed = mailTabSchema.safeParse(value);

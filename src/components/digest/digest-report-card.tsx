@@ -1,12 +1,32 @@
 import Link from "next/link";
 
 import { EmptyState } from "@/components/layout/empty-state";
+import { MailListCard } from "@/components/mail/mail-list-card";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LabeledField } from "@/components/ui/labeled-field";
-import { ThreadTags } from "@/components/ui/thread-tags";
-import type { DigestReport } from "@/lib/digest/types";
-import { classForDeadline, formatDate, formatDateTime } from "@/lib/ui/format";
+import type { DigestReport, DigestTopAction } from "@/lib/digest/types";
+import { threadPlacementReason } from "@/lib/mail/placement";
+import { formatDateTime } from "@/lib/ui/format";
+
+function DigestActionRow({ action }: { action: DigestTopAction }) {
+  return (
+    <MailListCard
+      threadId={action.threadId}
+      title={action.title}
+      sender={null}
+      latestMessageAt={null}
+      category={action.category}
+      urgency={action.urgency}
+      deadline={action.deadline}
+      whyText={threadPlacementReason({
+        tab: "open",
+        title: action.title,
+        category: action.category,
+        deadline: action.deadline,
+      })}
+    />
+  );
+}
 
 function DigestCounts({ digest }: { digest: DigestReport }) {
   const stats = [
@@ -31,7 +51,7 @@ function DigestCounts({ digest }: { digest: DigestReport }) {
 
 export function DigestReportCard({
   digest,
-  title = "Latest digest",
+  title = "Latest summary",
   variant = "full",
 }: {
   digest: DigestReport | null;
@@ -42,9 +62,9 @@ export function DigestReportCard({
     if (!digest) {
       return (
         <p className="text-muted-foreground text-sm">
-          No digest yet. After a scan, period counts and top actions will appear here.{" "}
-          <Link href="/digests" className="text-primary font-medium hover:underline">
-            Digest history
+          No history yet. After a scan, period counts and top actions will appear here.{" "}
+          <Link href="/history" className="text-primary font-medium hover:underline">
+            History
           </Link>
         </p>
       );
@@ -53,7 +73,7 @@ export function DigestReportCard({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Latest digest</CardTitle>
+          <CardTitle>Latest summary</CardTitle>
           <CardDescription>
             {formatDateTime(digest.periodStart)} – {formatDateTime(digest.periodEnd)}
             {digest.actionCount > 0
@@ -66,25 +86,16 @@ export function DigestReportCard({
             <p className="line-clamp-3 text-sm leading-relaxed text-pretty">{digest.summaryText}</p>
           ) : null}
           {preview.length > 0 ? (
-            <ul className="divide-border divide-y text-sm">
+            <div className="space-y-3">
               {preview.map((action) => (
-                <li key={action.threadId} className="py-2 first:pt-0 last:pb-0">
-                  <Link
-                    href={`/thread/${action.threadId}`}
-                    className="hover:text-primary font-medium break-words hover:underline"
-                    dir="auto"
-                    title={action.title}
-                  >
-                    {action.title}
-                  </Link>
-                </li>
+                <DigestActionRow key={action.threadId} action={action} />
               ))}
-            </ul>
+            </div>
           ) : (
-            <p className="text-muted-foreground text-sm">No actions in this digest.</p>
+            <p className="text-muted-foreground text-sm">No actions in this summary.</p>
           )}
-          <Link href="/digests" className={buttonVariants({ variant: "outline", size: "sm" })}>
-            Full digest
+          <Link href="/history" className={buttonVariants({ variant: "outline", size: "sm" })}>
+            View History
           </Link>
         </CardContent>
       </Card>
@@ -100,10 +111,10 @@ export function DigestReportCard({
         </CardHeader>
         <CardContent>
           <EmptyState
-            title="No digest yet"
-            description="Run a scan to generate an in-app digest. Counts come from mail already stored in MailPriority."
+            title="No history yet"
+            description="Run a scan to add an entry to History. Counts come from mail already stored in MailPriority."
             action={
-              <Link href="/dashboard#scan" className={buttonVariants({ size: "sm" })}>
+              <Link href="/scan" className={buttonVariants({ size: "sm" })}>
                 Scan now
               </Link>
             }
@@ -129,37 +140,14 @@ export function DigestReportCard({
         {digest.topActions.length > 0 ? (
           <div>
             <h3 className="text-foreground mb-2 text-sm font-semibold">Top actions</h3>
-            <ul className="divide-border divide-y">
+            <div className="space-y-3">
               {digest.topActions.map((action) => (
-                <li key={action.threadId} className="py-2 first:pt-0 last:pb-0">
-                  <Link
-                    href={`/thread/${action.threadId}`}
-                    className="hover:text-primary block font-medium break-words hover:underline"
-                    dir="auto"
-                    title={action.title}
-                  >
-                    {action.title}
-                  </Link>
-                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-                    <ThreadTags
-                      category={action.category}
-                      urgency={action.urgency}
-                      deadline={action.deadline}
-                      showStatus={false}
-                      showImportance={false}
-                    />
-                    {action.deadline ? (
-                      <LabeledField label="Due" valueClassName={classForDeadline(action.deadline)}>
-                        {formatDate(action.deadline)}
-                      </LabeledField>
-                    ) : null}
-                  </div>
-                </li>
+                <DigestActionRow key={action.threadId} action={action} />
               ))}
-            </ul>
+            </div>
           </div>
         ) : (
-          <p className="text-muted-foreground text-sm">No actions in this digest.</p>
+          <p className="text-muted-foreground text-sm">No actions in this summary.</p>
         )}
       </CardContent>
     </Card>

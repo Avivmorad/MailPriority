@@ -24,7 +24,7 @@ export function CollapsibleTopicGroups({
   variant?: "plain" | "panel";
 }) {
   const topicIds = useMemo(() => groups.map((group) => group.topic), [groups]);
-  const [collapsed, setCollapsed] = useCollapsedIds(storageKey);
+  const [collapsed, setCollapsed] = useCollapsedIds(storageKey, { defaultIds: topicIds });
 
   const allCollapsed = topicIds.length > 0 && topicIds.every((id) => collapsed.includes(id));
 
@@ -75,7 +75,7 @@ export function CollapsibleTopicGroups({
                   )}
                   aria-hidden
                 />
-                <span className="min-w-0 truncate font-bold" dir="auto">
+                <span className="min-w-0 flex-1 font-bold break-words" dir="auto">
                   {ACTION_TOPIC_LABELS[group.topic]}
                 </span>
                 <span className="text-muted-foreground tabular-nums">{group.count}</span>
@@ -83,22 +83,11 @@ export function CollapsibleTopicGroups({
                   {open ? "Hide" : "Show"}
                 </span>
               </button>
-              <div
-                className={cn(
-                  "grid transition-[grid-template-rows] duration-200 ease-out",
-                  open ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
-                )}
-              >
-                <div id={panelId} className="overflow-hidden">
-                  <div
-                    className={cn(variant === "panel" ? "" : "space-y-3 pt-1")}
-                    aria-hidden={!open}
-                    inert={!open ? true : undefined}
-                  >
-                    {group.body}
-                  </div>
+              {open ? (
+                <div id={panelId} className={cn(variant === "panel" ? "" : "space-y-3 pt-1")}>
+                  {group.body}
                 </div>
-              </div>
+              ) : null}
             </section>
           );
         })}

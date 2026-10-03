@@ -4,8 +4,7 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/supabase/auth";
 import {
   beginManualInitialScan,
-  getLatestScanRunForUser,
-  getScanRunsForUser,
+  getScanProgressForUser,
   manualScanRequestSchema,
   ScanRequestError,
 } from "@/lib/scans/manual";
@@ -14,16 +13,14 @@ import { runScanInBackground } from "@/lib/scans/runtime";
 
 export const maxDuration = 300;
 
+/** Progress-only snapshot. History stays on the settings page, not this poll. */
 export async function GET() {
   const user = await getSessionUser();
   if (!user) {
     return NextResponse.json({ error: "not_signed_in" }, { status: 401 });
   }
-  const [scan, items] = await Promise.all([
-    getLatestScanRunForUser(user.id),
-    getScanRunsForUser(user.id, 10),
-  ]);
-  return NextResponse.json({ scan, items }, { headers: { "Cache-Control": "no-store" } });
+  const scan = await getScanProgressForUser(user.id);
+  return NextResponse.json({ scan }, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function POST(request: Request) {

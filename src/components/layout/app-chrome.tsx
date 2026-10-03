@@ -26,7 +26,7 @@ export async function AppChrome({
     connectionStatus: gmailStatus.connection?.status ?? null,
     scanStatus: latestScan ? String(latestScan.status) : null,
     errorCode: latestScan ? ((latestScan.error_code as string | null) ?? null) : null,
-    suppressRunning: current === "dashboard",
+    suppressRunning: current === "dashboard" || current === "scan",
     returnTo:
       current === "thread" ? "/mail" : current === "onboarding" ? "/onboarding" : `/${current}`,
   });

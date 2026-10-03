@@ -44,8 +44,33 @@ describe("postProcessThreadAnalysis", () => {
     );
 
     expect(processed.requires_action).toBe(true);
-    expect(processed.action_summary).toBe("בדוק את המייל");
+    expect(processed.action_summary).toBe("Review this email");
     expect(() => assertThreadAnalysisInvariants(processed)).not.toThrow();
+  });
+
+  it("stores English Do and Why copy when the model wrote them in Hebrew", () => {
+    const processed = postProcessThreadAnalysis(
+      analysis({
+        status: "action_required",
+        requires_action: true,
+        action_type: "pay",
+        category: "finance",
+        action_summary: "שלם את החשבונית",
+        action_reason: "נותר תשלום",
+        importance_reason: "חשבונית פתוחה",
+        summary: "סיכום",
+        short_display_title: "חשבונית",
+      }),
+    );
+
+    expect(processed.status).toBe("action_required");
+    expect(processed.action_type).toBe("pay");
+    expect(processed.requires_action).toBe(true);
+    expect(processed.action_summary).toBe("Pay the charge");
+    expect(processed.action_reason).toBeNull();
+    expect(processed.importance_reason).toBe("Needs a quick look");
+    expect(processed.summary).toBe("סיכום");
+    expect(processed.short_display_title).toBe("חשבונית");
   });
 
   it("replaces literal nullish user-facing strings with usable fallbacks", () => {

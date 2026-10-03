@@ -9,7 +9,7 @@ What MailPriority does and how triage behaves. For how it is built, see
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
 | Product / UI / privacy / terms | **MailPriority**                                                                                                   |
 | GitHub repo, npm package       | **MailPilot**                                                                                                      |
-| Gmail label prefix             | **`MailPilot/`** (do not rename to MailPriority)                                                                   |
+| Gmail label prefix             | **`MailPriority/`**. Existing `MailPilot/` managed labels are renamed in place.                                    |
 | Public URL                     | [mail-priority.vercel.app](https://mail-priority.vercel.app). `gmailpilot.vercel.app` is detached and returns 404. |
 
 Do not use the archived working name “Inbox Triage AI” in UI or new docs.
@@ -25,7 +25,24 @@ Do not use the archived working name “Inbox Triage AI” in UI or new docs.
 | **Snoozed** | `snoozed`                      | action row `SNOOZED`                          |
 | **Ignored** | `ignored`                      | analysis `ignore`                             |
 
-Status chips for ignored mail say **Ignore**. The tab and digest count say **Ignored**.
+Status chips for ignored mail say **Ignore**. The tab and the History count say **Ignored**.
+
+The six mail tabs stay the primary filter row. Each card uses the hue of that
+tab’s tag: For You sky, Actions red, Pending amber, Closed green, Ignored zinc.
+Snoozed has no status chip, so its card is indigo. The selected card uses a
+deeper fill of the same hue.
+
+A quieter row under the tabs can narrow the same list. Combining a tab with any
+of these is an AND. **Clear filters** drops them and leaves the tab in place.
+
+| Control      | What it filters                                                                                                              | Query              |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| **Priority** | High, Medium, or Low. Medium means medium priority.                                                                          | `priority=medium`  |
+| **Signal**   | Closed-set chips on the rows in this tab, other than the six tabs and priority. Examples: Urgency: High, Pay, Reply, Ignore. | `signal=high`      |
+| **Category** | One menu of categories present in this tab. Not a card per category.                                                         | `category=finance` |
+
+A category matches the topic group for that thread, including legacy categories
+and security notices. Clicking a category badge sets the same category filter.
 
 ## MVP scope
 
@@ -33,8 +50,8 @@ Status chips for ignored mail say **Ignore**. The tab and digest count say **Ign
 
 - Connect one Gmail inbox (separate from app sign-in)
 - Scan threads over a chosen lookback; classify with structured JSON
-- Apply `MailPilot/*` Gmail labels after validated analysis only
-- Dashboard overview + Mail tabs + in-app digest
+- Apply `MailPriority/*` Gmail labels after validated analysis only
+- Dashboard overview + Mail tabs + History
 - Incremental History API sync after the first successful scan
 - Daily scheduled scan; resumable scans across Vercel Hobby time slices
 - Privacy: no long-term full email body storage; delete analysis or account
@@ -43,7 +60,7 @@ Status chips for ignored mail say **Ignore**. The tab and digest count say **Ign
 **Out of scope (MVP)**
 
 - Auto-send, auto-delete, or auto-archive mail
-- Email delivery of digests (in-app only; email digest is a later extension)
+- Email digest delivery (History stays in the app; emailing a digest is a later extension)
 - Merging similar notices into a single Gmail thread
 - Scan budget / cost caps (telemetry is observe-only)
 
@@ -61,17 +78,17 @@ SQL on the project remains the durable operator path. Delete analysis also remov
 
 ## Operating defaults
 
-| Decision             | Choice                                                                                                                            |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Users                | Multi-user architecture; test with a single user for now                                                                          |
-| Automatic scan       | Best-effort once a day (Hobby cron `0 6 * * *` UTC). A stored local time is not when the scan runs. Manual Scan now is unchanged. |
-| Timezone             | **Asia/Jerusalem**                                                                                                                |
-| Initial scan window  | **1 / 2 / 3 / 4 days, 1 / 2 / 3 weeks, or 1 month** (default **7 days**)                                                          |
-| Subsequent scans     | Changes since last successful scan (incremental)                                                                                  |
-| Summary language     | **English** (`summary`, `short_display_title`)                                                                                    |
-| Presentation         | Dashboard **and** in-app digest                                                                                                   |
-| Email body retention | Do **not** persist full email bodies long-term                                                                                    |
-| Sending replies      | The system **never** sends replies on the user's behalf                                                                           |
+| Decision             | Choice                                                                                                                                  |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Users                | Multi-user architecture; test with a single user for now                                                                                |
+| Automatic scan       | Best-effort once a day (Hobby cron `0 6 * * *` UTC). A stored local time is not when the scan runs. Manual Scan now is unchanged.       |
+| Timezone             | **Asia/Jerusalem**                                                                                                                      |
+| Initial scan window  | **1 / 2 / 3 / 4 days, 1 / 2 / 3 weeks, or 1 month** (default **7 days**)                                                                |
+| Subsequent scans     | Changes since last successful scan (incremental)                                                                                        |
+| Summary language     | **English** (`summary`, `short_display_title`, and the Do / Why this tab lines: `action_summary`, `action_reason`, `importance_reason`) |
+| Presentation         | Dashboard **and** History                                                                                                               |
+| Email body retention | Do **not** persist full email bodies long-term                                                                                          |
+| Sending replies      | The system **never** sends replies on the user's behalf                                                                                 |
 
 Stored as `user_triage_settings`: `daily_scan_time = '08:00'`,
 `timezone = 'Asia/Jerusalem'`, `scan_interval_minutes = null`. That stored time
@@ -80,33 +97,57 @@ lookback values: 1, 2, 3, 4, 7, 14, 21, or 30 days.
 
 Manual Scan now shows live progress (conversations checked / total). A scan that
 cannot finish inside one Hobby invocation (~240s of work, 300s `maxDuration`)
-stays `RUNNING`, persists a thread cursor, and continues on the next slice. The
-in-app digest is written when the window finishes with `SUCCESS` or `PARTIAL`.
+stays `RUNNING`, persists a thread cursor, and continues on the next slice. A
+History entry is written when the window finishes with `SUCCESS` or `PARTIAL`.
 The Gmail History API cursor advances only on `SUCCESS`, so a partial scan can
 rediscover failed threads.
 
 Gmail calls use a rolling one-minute unit budget (default 12,000). Scan now
 returns immediately and keeps running in the background.
 
+## Triage settings
+
+Settings → Triage stores VIP senders, ignored senders, ignored domains, custom
+AI instructions, and whether to write a History entry after a scan
+(`user_triage_settings`). VIP senders are one chip editor. Ignored senders and
+ignored domains share one chip editor titled Ignore senders & domains: an entry
+with `@` is an email, and an entry without `@` is a domain. The two editors
+share one row and wrap onto separate rows only when that row would overflow.
+Those stay separate arrays in the API. Custom instructions stay freeform text
+(max 4000 characters).
+
+**Save triage settings** persists the form without starting a scan. **Update
+Now** saves the current form, then starts the same lookback scan as default
+Scan now (last week / `lookbackDays: 7`). Threads in that window are
+reclassified when the triage fingerprint changes (VIP / ignore / custom
+instructions). It does not re-triage the entire mailbox history, auto-send,
+delete, or archive mail. Progress is on the Scan tab.
+
 ## Gmail labels
 
-| Purpose         | Label                       |
-| --------------- | --------------------------- |
-| Important       | `MailPilot/Important`       |
-| Action required | `MailPilot/Action Required` |
-| Low priority    | `MailPilot/Low Priority`    |
-| Processed       | `MailPilot/Processed`       |
+| Purpose         | Label                          |
+| --------------- | ------------------------------ |
+| Important       | `MailPriority/Important`       |
+| Action required | `MailPriority/Action Required` |
+| Low priority    | `MailPriority/Low Priority`    |
+| Processed       | `MailPriority/Processed`       |
 
 Rules:
 
 - Every thread has **one canonical `status`** in the database
   (`action_required`, `waiting`, `informational`, `resolved`, or `ignore`).
-  Mail tabs, action workflow, and digests derive from this — a thread never has
+  Mail tabs, action workflow, and History entries derive from this — a thread never has
   two competing statuses.
-- Gmail **`MailPilot/*` labels are presentation only**. A thread may carry more
+- Gmail **`MailPriority/*` labels are presentation only**. A thread may carry more
   than one at once (e.g. Important + Action Required + Processed).
-- Labels are created if missing on first connect; mapping stored as
-  `logical_name → gmail_label_id`. Never modify user labels outside `MailPilot/`.
+- Labels are ensured after Connect Gmail (off the OAuth redirect wait) and
+  reconciled on scan if missing or still named `MailPilot/`. Mapping is stored as
+  `logical_name → gmail_label_id`. A previous managed `MailPilot/` label is
+  renamed with Gmail `labels.patch` to the matching `MailPriority/` name, so the
+  label id stays on the thread. New installs create `MailPriority/` only.
+  Gmail may leave an empty `MailPilot` parent label behind; it is not deleted,
+  because deleting a label removes it from threads. User labels outside the
+  managed `MailPriority/` names and those previous `MailPilot/` names stay as they are.
 - A Gmail inbox may be **actively connected to only one MailPriority user** at a
   time (`0010_gmail_mailbox_uniqueness.sql`).
 
@@ -115,8 +156,11 @@ Gmail label set is a presentation choice.
 
 ## For You vs Actions
 
-The dashboard is an overview (scan status and counts). Mail lists live on
-**Mail** tabs and stay separate products:
+The dashboard is an overview (short scan status line and mailbox counts). Its
+header includes **Scan Now**, which starts the same default last-week manual
+scan as Scan now (`lookbackDays: 7`) and opens the Scan tab. The progress
+circle, lookback control, and per-scan stats live only on the **Scan** tab
+(`/scan`). Mail lists live on **Mail** tabs and stay separate products:
 
 1. **For You** — useful FYI only (`informational` / `resolved`). Never `ignore`,
    never Actions or Pending tasks.
@@ -227,3 +271,13 @@ Gmail step. Owner console steps: [`OWNER_TASKS.md`](OWNER_TASKS.md).
 - **From / sender:** requires custom SMTP (Resend, SendGrid, Google Workspace,
   etc.). Without it, Gmail keeps showing Supabase Auth. Not required for an
   internal launch; templates alone change subject and body immediately.
+
+## Urgency indicators
+
+Every email displays **Urgency: High, Medium, Low, None, or Unknown**.
+Email and action rows have matching left markers: red, orange, green, gray,
+and blue respectively. Stored AI values remain compatible: `urgent` maps to
+High, `soon` to Medium, `normal` to Low, and `none` to None. Missing or
+unrecognized values display Unknown. Existing deadline proximity overrides
+stored urgency: overdue maps to High, within seven days to Medium, later to Low.
+Urgency is independent of importance and mail placement.

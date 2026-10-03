@@ -59,6 +59,14 @@ export function formatDateTime(iso: string | null | undefined): string {
   return `${day} ${month}, ${hour}:${minute}`;
 }
 
+/** Inclusive lookback as `3 OCT - 3 NOV`, in the display timezone. */
+export function formatScanWindow(lookbackDays: number, now: Date = new Date()): string {
+  const end = addCalendarDaysIso(0, now);
+  const start = addCalendarDaysIso(-lookbackDays, now);
+  const day = (isoDate: string) => formatDate(isoDate).toUpperCase();
+  return `${day(start)} - ${day(end)}`;
+}
+
 export function formatDate(isoDate: string | null | undefined): string {
   if (!isoDate) {
     return "—";
@@ -162,11 +170,11 @@ export function classForDeadline(
 ): string {
   switch (deadlineProximity(isoDate, now)) {
     case "expired":
-      return "font-semibold text-red-600 dark:text-red-400";
+      return "font-semibold text-urgency-high";
     case "soon":
-      return "font-semibold text-orange-600 dark:text-orange-400";
+      return "font-semibold text-urgency-medium";
     case "later":
-      return "font-semibold text-sky-600 dark:text-sky-300";
+      return "font-semibold text-urgency-low";
     default:
       return "";
   }
@@ -182,8 +190,5 @@ export function displayUrgencyForDeadline(
   if (proximity) {
     return proximity;
   }
-  if (!storedUrgency || storedUrgency === "none" || storedUrgency === "normal") {
-    return null;
-  }
-  return storedUrgency;
+  return storedUrgency?.trim().toLowerCase() || "unknown";
 }

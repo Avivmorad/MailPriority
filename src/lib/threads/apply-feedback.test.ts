@@ -45,4 +45,13 @@ describe("correctionFromFeedback", () => {
     expect(correctionFromFeedback("wrong", base).applied).toBe(false);
     expect(correctionFromFeedback("not_waiting", base).applied).toBe(false);
   });
+
+  it("moves a thread to Ignored and drops the workflow row", () => {
+    expect(correctionFromFeedback("ignore", { ...base, actionStatus: "OPEN" })).toEqual({
+      applied: true,
+      thread: { status: "ignore", requiresAction: false },
+      actionStatus: null,
+      removeAction: true,
+    });
+  });
 });

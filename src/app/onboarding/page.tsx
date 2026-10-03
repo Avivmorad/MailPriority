@@ -38,16 +38,16 @@ export default async function OnboardingPage({
   }
 
   const params = await searchParams;
-  const [step, gmailStatus, preferences, latestScan] = await Promise.all([
-    getOnboardingStepForUser(user.id),
+  const step = await getOnboardingStepForUser(user.id);
+  if (step === "complete") {
+    redirect(dashboardWithFlash(params.gmail, params.reason));
+  }
+
+  const [gmailStatus, preferences, latestScan] = await Promise.all([
     getGmailStatusForUser(user.id),
     getScanPreferences(user.id),
     getLatestScanRunForUser(user.id),
   ]);
-
-  if (step === "complete") {
-    redirect(dashboardWithFlash(params.gmail, params.reason));
-  }
 
   const connected = gmailStatus.connection?.status === "CONNECTED";
   const latestStatus = latestScan ? String(latestScan.status) : null;

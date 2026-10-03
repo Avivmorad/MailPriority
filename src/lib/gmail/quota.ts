@@ -17,6 +17,11 @@ export const GMAIL_UNITS = {
   historyList: 2,
   labelsList: 1,
   labelsCreate: 5,
+  /**
+   * labels.patch is the partial form of labels.update. The quota table lists
+   * labels.update at 5 and does not list patch separately.
+   */
+  labelsPatch: 5,
   sendAsList: 1,
 } as const;
 

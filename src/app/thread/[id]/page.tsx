@@ -7,9 +7,11 @@ import { ThreadFeedback } from "@/components/threads/thread-feedback";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LabeledField } from "@/components/ui/labeled-field";
 import { ThreadTags } from "@/components/ui/thread-tags";
+import { normalizeCategory } from "@/lib/ai/categories";
 import { mailBucketForThread } from "@/lib/mail/buckets";
 import { isUncertainClassification } from "@/lib/mail/filters";
-import { threadPlacementReason } from "@/lib/mail/placement";
+import { mailViewPath } from "@/lib/mail/tabs";
+import { displayDoLine, threadPlacementReason } from "@/lib/mail/placement";
 import { requireOnboardingComplete } from "@/lib/onboarding/guard";
 import { getSessionUser } from "@/lib/supabase/auth";
 import { getThreadDetailForUser } from "@/lib/threads/queries";
@@ -38,14 +40,26 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
   const senderMessage = inbound ?? thread.messages[thread.messages.length - 1];
   const sender = senderMessage?.senderName ?? senderMessage?.senderEmail ?? null;
   const backTab = mailBucketForThread({ status: thread.status, actionStatus: thread.actionStatus });
-  const doText = usableDisplayText(thread.actionSummary);
+  const heading = displayThreadTitle(thread.shortDisplayTitle, thread.summary, thread.subject);
+  const doText = displayDoLine({
+    tab: backTab,
+    actionSummary: thread.actionSummary,
+    title: heading,
+    category: thread.category,
+    actionType: thread.actionType,
+    requiresReply: thread.requiresReply,
+    deadline: thread.deadline,
+    deadlineText: thread.deadlineText,
+    sender,
+    waitingFor: thread.waitingFor,
+    snoozedUntil: thread.snoozedUntil,
+  });
   const whyText =
     usableDisplayText(thread.actionReason) &&
     doText &&
     thread.actionReason?.trim() === doText.trim()
       ? null
       : usableDisplayText(thread.actionReason);
-  const heading = displayThreadTitle(thread.shortDisplayTitle, thread.summary, thread.subject);
 
   return (
     <AppChrome user={user} current="thread" width="narrow">
@@ -77,6 +91,14 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
         deadline={thread.deadline}
         actionType={thread.actionType}
         includeLowImportance
+        categoryHref={
+          thread.category
+            ? mailViewPath({
+                tab: backTab,
+                category: normalizeCategory(thread.category),
+              })
+            : undefined
+        }
       />
 
       <Card>
@@ -106,14 +128,28 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
               </LabeledField>
             ) : null}
             <LabeledField label="Why this tab" dir="auto">
-              {threadPlacementReason({ tab: backTab, evidence: whyText })}
+              {threadPlacementReason({
+                tab: backTab,
+                evidence: whyText,
+                importanceReason: thread.importanceReason,
+                summary: thread.summary,
+                title: heading,
+                category: thread.category,
+                actionType: thread.actionType,
+                requiresReply: thread.requiresReply,
+                deadline: thread.deadline,
+                deadlineText: thread.deadlineText,
+                sender,
+                waitingFor: thread.waitingFor,
+                snoozedUntil: thread.snoozedUntil,
+              })}
             </LabeledField>
             {thread.waitingFor ? (
               <LabeledField label="Pending on">{thread.waitingFor}</LabeledField>
             ) : null}
           </div>
           {lowConfidence ? (
-            <p className="text-sm text-amber-800 dark:text-amber-200">
+            <p className="text-urgency-medium text-sm">
               Low classification confidence ({thread.confidence?.toFixed(2)}). Double-check before
               acting.
             </p>
@@ -151,22 +187,25 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
             thread.messages.map((message) => (
               <div
                 key={message.id}
-                className="border-border/70 border-b py-3 first:pt-0 last:border-0 last:pb-0"
+                className="border-border/70 min-w-0 overflow-hidden border-b py-3 first:pt-0 last:border-0 last:pb-0"
               >
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <p className="text-foreground text-sm font-semibold">
+                <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-2">
+                  <p className="text-foreground min-w-0 text-sm font-semibold [overflow-wrap:anywhere] break-words">
                     {message.senderName ?? message.senderEmail ?? "Unknown"}
                     <span className="text-muted-foreground font-normal">
                       {" "}
                       · {labelForDirection(message.direction)}
                     </span>
                   </p>
-                  <p className="text-muted-foreground text-xs">
+                  <p className="text-muted-foreground shrink-0 text-xs">
                     {formatDateTime(message.receivedAt)}
                   </p>
                 </div>
                 {message.snippet ? (
-                  <p className="text-muted-foreground mt-1 text-sm leading-relaxed" dir="auto">
+                  <p
+                    className="text-muted-foreground mt-1 text-sm leading-relaxed [overflow-wrap:anywhere] break-words"
+                    dir="auto"
+                  >
                     {message.snippet}
                   </p>
                 ) : null}

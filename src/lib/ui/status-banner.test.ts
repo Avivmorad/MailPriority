@@ -29,7 +29,7 @@ describe("appStatusBanner", () => {
       errorCode: "gmail_quota",
     });
     expect(quotaBanner?.title).toContain("quota");
-    expect(quotaBanner?.href).toBe("/dashboard#scan");
+    expect(quotaBanner?.href).toBe("/scan");
     expect(quotaBanner?.actionLabel).toBe("Try a shorter lookback");
 
     const aiBanner = appStatusBanner({
@@ -38,7 +38,7 @@ describe("appStatusBanner", () => {
       errorCode: "ai_unavailable",
     });
     expect(aiBanner?.title).toContain("temporarily unavailable");
-    expect(aiBanner?.href).toBe("/dashboard#scan");
+    expect(aiBanner?.href).toBe("/scan");
     expect(aiBanner?.actionLabel).toBe("Try again");
 
     const cancelledBanner = appStatusBanner({
@@ -48,13 +48,14 @@ describe("appStatusBanner", () => {
     });
     expect(cancelledBanner?.kind).toBe("info");
     expect(cancelledBanner?.title).toBe("Scan stopped.");
+    expect(cancelledBanner?.href).toBe("/scan");
     expect(cancelledBanner?.actionLabel).toBe("Scan again");
 
     const genericBanner = appStatusBanner({
       connectionStatus: "CONNECTED",
       scanStatus: "FAILED",
     });
-    expect(genericBanner?.href).toBe("/dashboard#scan");
+    expect(genericBanner?.href).toBe("/scan");
     expect(genericBanner?.actionLabel).toBe("Scan again");
   });
 

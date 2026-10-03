@@ -1,6 +1,21 @@
 import { describe, expect, it } from "vitest";
 
-import { gmailSearchFallbackUrl, gmailThreadUrl } from "@/lib/gmail/deep-link";
+import { gmailSearchFallbackUrl, gmailThreadUrl, mailGmailHref } from "@/lib/gmail/deep-link";
+
+describe("mailGmailHref", () => {
+  it("keeps a stored thread URL", () => {
+    expect(mailGmailHref(" https://mail.google.com/mail/u/0/#inbox/abc ")).toBe(
+      "https://mail.google.com/mail/u/0/#inbox/abc",
+    );
+  });
+
+  it("falls back to Gmail home when the stored URL is blank", () => {
+    expect(mailGmailHref(null)).toBe("https://mail.google.com/mail/");
+    expect(mailGmailHref(undefined)).toBe("https://mail.google.com/mail/");
+    expect(mailGmailHref("")).toBe("https://mail.google.com/mail/");
+    expect(mailGmailHref("   ")).toBe("https://mail.google.com/mail/");
+  });
+});
 
 describe("gmailThreadUrl", () => {
   it("builds an authuser all-mail thread link", () => {

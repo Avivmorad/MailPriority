@@ -6,10 +6,13 @@ import { getClientEnv } from "@/lib/config/env";
 
 const PROTECTED_PREFIXES = [
   "/dashboard",
+  "/scan",
   "/actions",
   "/mail",
+  "/history",
   "/digests",
   "/settings",
+  "/usage",
   "/thread",
   "/onboarding",
 ];

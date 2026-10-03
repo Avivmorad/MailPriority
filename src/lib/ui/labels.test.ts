@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   humanizeToken,
+  urgencyLevel,
+  accentForUrgency,
   labelForDirection,
   labelForScanStatus,
   labelForThreadStatus,
@@ -26,5 +28,21 @@ describe("humanizeToken", () => {
 
   it("returns empty string for missing values", () => {
     expect(humanizeToken(null)).toBe("");
+  });
+});
+
+describe("urgency levels", () => {
+  it.each([
+    ["urgent", "high", "urgency-high"],
+    ["expired", "high", "urgency-high"],
+    ["soon", "medium", "urgency-medium"],
+    ["normal", "low", "urgency-low"],
+    ["later", "low", "urgency-low"],
+    ["none", "none", "urgency-none"],
+    [null, "unknown", "urgency-unknown"],
+    ["invalid", "unknown", "urgency-unknown"],
+  ])("maps %s to %s with a %s side marker", (stored, level, color) => {
+    expect(urgencyLevel(stored)).toBe(level);
+    expect(accentForUrgency(stored)).toContain(`border-l-${color}`);
   });
 });

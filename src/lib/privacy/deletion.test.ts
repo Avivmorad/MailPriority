@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { disconnectGmailAndClearAnalysis } from "@/lib/gmail/connections";
 import {
   deleteAccountForUser,
   deleteAnalysisDataForUser,
@@ -135,5 +136,16 @@ describe("deleteAccountForUser", () => {
     expect(port.rows.email_threads.some((row) => row.userId === "user-1")).toBe(false);
     expect(port.disconnected).toEqual(["user-1"]);
     expect(port.deletedUsers).toEqual(["user-1"]);
+  });
+
+  it("clears the same analysis rows when Gmail is disconnected", async () => {
+    const port = createMemoryPort("user-1");
+    await disconnectGmailAndClearAnalysis("user-1", {
+      disconnect: (userId) => port.disconnectGmail(userId),
+      purge: (userId) => deleteAnalysisDataForUser(userId, port).then(() => undefined),
+    });
+    expect(port.disconnected).toEqual(["user-1"]);
+    expect(port.rows.email_threads.some((row) => row.userId === "user-1")).toBe(false);
+    expect(port.deletedUsers).toEqual([]);
   });
 });

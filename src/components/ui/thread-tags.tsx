@@ -12,6 +12,7 @@ export function ThreadTags({
   showStatus = true,
   showImportance = true,
   includeLowImportance = false,
+  categoryHref,
 }: {
   category?: string | null;
   status?: string | null;
@@ -22,6 +23,7 @@ export function ThreadTags({
   showStatus?: boolean;
   showImportance?: boolean;
   includeLowImportance?: boolean;
+  categoryHref?: string;
 }) {
   const urgencyValue = displayUrgencyForDeadline(deadline, urgency);
   const tags: Array<{ kind: TagKind; value: string }> = [];
@@ -53,7 +55,12 @@ export function ThreadTags({
   return (
     <div className="flex flex-wrap items-center gap-1">
       {tags.map((tag) => (
-        <MetaBadge key={`${tag.kind}:${tag.value}`} kind={tag.kind} value={tag.value} />
+        <MetaBadge
+          key={`${tag.kind}:${tag.value}`}
+          kind={tag.kind}
+          value={tag.value}
+          href={tag.kind === "category" ? categoryHref : undefined}
+        />
       ))}
     </div>
   );

@@ -1,14 +1,23 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useId, useState } from "react";
 
+import { SettingInfo, SettingLabel } from "@/components/settings/setting-info";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   DAILY_SCAN_CARD_DESCRIPTION,
   DAILY_SCAN_SAVED_MESSAGE,
 } from "@/lib/settings/schedule-copy";
+import {
+  SAVE_SCHEDULE_INFO,
+  SAVE_SCHEDULE_LABEL,
+  SCAN_TIME_INFO,
+  SCAN_TIME_LABEL,
+  SCAN_TIMEZONE_INFO,
+  SCAN_TIMEZONE_LABEL,
+} from "@/lib/settings/setting-info-copy";
 
 export function ScanPreferencesForm({
   dailyScanTime,
@@ -18,6 +27,8 @@ export function ScanPreferencesForm({
   timezone: string;
 }) {
   const router = useRouter();
+  const timeId = useId();
+  const zoneId = useId();
   const [time, setTime] = useState(dailyScanTime);
   const [zone, setZone] = useState(timezone);
   const [busy, setBusy] = useState(false);
@@ -56,19 +67,25 @@ export function ScanPreferencesForm({
         <CardDescription>{DAILY_SCAN_CARD_DESCRIPTION}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <label className="block text-sm">
-          <span className="text-muted-foreground mb-1.5 block">Time</span>
+        <div className="block text-sm">
+          <SettingLabel label={SCAN_TIME_LABEL} htmlFor={timeId} description={SCAN_TIME_INFO} />
           <input
+            id={timeId}
             type="time"
             className="border-input bg-background h-9 w-full max-w-xs rounded-lg border px-3 text-sm"
             value={time}
             onChange={(event) => setTime(event.target.value)}
             disabled={busy}
           />
-        </label>
-        <label className="block text-sm">
-          <span className="text-muted-foreground mb-1.5 block">Timezone</span>
+        </div>
+        <div className="block text-sm">
+          <SettingLabel
+            label={SCAN_TIMEZONE_LABEL}
+            htmlFor={zoneId}
+            description={SCAN_TIMEZONE_INFO}
+          />
           <input
+            id={zoneId}
             type="text"
             className="border-input bg-background h-9 w-full max-w-xs rounded-lg border px-3 text-sm"
             value={zone}
@@ -76,10 +93,13 @@ export function ScanPreferencesForm({
             disabled={busy}
             autoComplete="off"
           />
-        </label>
-        <Button type="button" disabled={busy} onClick={() => void save()}>
-          {busy ? "Saving…" : "Save schedule"}
-        </Button>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button type="button" disabled={busy} onClick={() => void save()}>
+            {busy ? "Saving…" : SAVE_SCHEDULE_LABEL}
+          </Button>
+          <SettingInfo label={SAVE_SCHEDULE_LABEL} description={SAVE_SCHEDULE_INFO} />
+        </div>
         {message ? (
           <p
             className={error ? "text-destructive text-sm" : "text-sm"}

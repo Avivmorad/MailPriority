@@ -12,6 +12,12 @@ export const GMAIL_QUOTA_USER_MESSAGE =
 
 const DEFAULT_DELAYS_MS = [60_000, 60_000, 60_000];
 
+/**
+ * Interactive Connect Gmail must not wait out scan-style 60s quota backoff.
+ * Empty means a single attempt (no sleep) so a 429 fails fast in the browser.
+ */
+export const GMAIL_CONNECT_RETRY_DELAYS_MS: number[] = [];
+
 export function isGmailAuthError(error: unknown): boolean {
   const status = httpStatus(error);
   if (status === 401) {

@@ -21,6 +21,8 @@ describe("public privacy policy", () => {
     expect(text).toMatch(/Delete analysis data removes that analysis data/);
     expect(text).toMatch(/Gmail stays connected, and the MailPriority login stays/);
     expect(text).toMatch(/revokes access when Google accepts the revoke/);
+    expect(text).toMatch(/Gmail labels under the MailPriority\/ prefix/);
+    expect(text).toMatch(/renames those managed labels to MailPriority\//);
     expect(text).toMatch(/does not delete the messages in Gmail/);
     expect(text).not.toMatch(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
     expect(PRIVACY_POLICY_SECTIONS.map((section) => section.id)).toEqual([

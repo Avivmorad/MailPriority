@@ -1,4 +1,6 @@
+import { SettingInfo } from "@/components/settings/setting-info";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SCAN_HISTORY_INFO, SCAN_HISTORY_LABEL } from "@/lib/settings/setting-info-copy";
 import { formatDateTime } from "@/lib/ui/format";
 import { humanizeToken, labelForScanStatus } from "@/lib/ui/labels";
 
@@ -16,7 +18,10 @@ export function ScanHistoryList({ scans }: { scans: ScanHistoryRow[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Scan history</CardTitle>
+        <CardTitle className="flex items-center gap-1.5">
+          {SCAN_HISTORY_LABEL}
+          <SettingInfo label={SCAN_HISTORY_LABEL} description={SCAN_HISTORY_INFO} />
+        </CardTitle>
         <CardDescription>Recent manual and scheduled runs for this mailbox.</CardDescription>
       </CardHeader>
       <CardContent>

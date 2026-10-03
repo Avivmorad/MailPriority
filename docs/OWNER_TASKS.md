@@ -90,7 +90,7 @@ Testing mode only allows listed test users, and those grants expire after seven 
    - Opening `https://mail-priority.vercel.app`
    - Creating or signing in to the MailPriority account
    - Clicking Connect Gmail and the Google consent screen that names Gmail access
-   - A finished scan and the `MailPilot/` labels in Gmail
+   - A finished scan and the `MailPriority/` labels in Gmail
    - Opening `https://mail-priority.vercel.app/privacy`
 6. Upload that video where the verification form asks for it. In the written explanation, say the app reads mail and applies labels, and that it does not send, delete, or archive mail.
 7. If Google assigns a security assessment, complete it with the lab they name. Use `https://mail-priority.vercel.app` and the production data path you will actually launch.
@@ -157,7 +157,7 @@ Supabase’s default sender is for testing. It restricts who can receive mail an
 The scan-timeout code is in the tree. These boxes stay open until two live accounts finish Success on `https://mail-priority.vercel.app`. The last live run was still partial; that proof was not re-run here.
 
 - [ ] On `https://mail-priority.vercel.app`, two different Gmail accounts each finish a seven-day Scan now as Success.
-- [ ] Mail shows separate Actions, For You, and Ignored lists, and Gmail shows the `MailPilot/` labels.
+- [ ] Mail shows separate Actions, For You, and Ignored lists, and Gmail shows the `MailPriority/` labels.
 - [ ] A second Scan new mail on each account does not duplicate threads or actions.
 - [ ] A thread that fails stays visible and can be scanned again.
 
@@ -168,7 +168,7 @@ The scan-timeout code is in the tree. These boxes stay open until two live accou
 3. On the dashboard, set the lookback to 7 days and click **Scan now**. Leave the tab open until it stops.
 4. Pass only if the footer status is Success. Partial, Cancelled, or a timeout message fails this task.
 5. Open Mail. Confirm the lists are labeled Actions, For You, and Ignored, and that a thread is not in two of those lists at once.
-6. In Gmail, confirm labels exist only under `MailPilot/`: `Important`, `Action Required`, `Low Priority`, and `Processed`. A thread’s label should match the Mail list it appeared in.
+6. In Gmail, confirm labels exist under `MailPriority/`: `Important`, `Action Required`, `Low Priority`, and `Processed`. A thread’s label should match the Mail list it appeared in. If those four still use `MailPilot/`, run Scan now once so they rename in place and the threads keep them.
 7. Click **Scan new mail**. Confirm thread counts and open actions do not double.
 8. If any conversation failed, confirm it is visible in the app and that running the scan again retries it.
 
@@ -230,7 +230,7 @@ Code session 4 updated the local pages. This box stays open until you read them 
 
 - [ ] Sections 1–12 are checked, and CI is green on the commit that is deployed to `https://mail-priority.vercel.app`.
 
-**Done when:** A person who is not on the test-user list can sign up or sign in, connect Gmail, finish a successful first scan, see Mail and `MailPilot/` labels, run Scan new mail, and disconnect or delete their data.
+**Done when:** A person who is not on the test-user list can sign up or sign in, connect Gmail, finish a successful first scan, see Mail and `MailPriority/` labels, run Scan new mail, and disconnect or delete their data.
 
 1. Confirm Google’s consent screen is no longer limited to the test-user list.
 2. On GitHub, confirm the latest `main` deploy’s CI and CodeQL checks passed.

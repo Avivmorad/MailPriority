@@ -1,3 +1,14 @@
+const GMAIL_HOME = "https://mail.google.com/mail/";
+
+/**
+ * Open-in-Gmail target for a stored thread URL.
+ * Blank values open Gmail home so the control stays a real link.
+ */
+export function mailGmailHref(gmailUrl: string | null | undefined): string {
+  const trimmed = gmailUrl?.trim();
+  return trimmed ? trimmed : GMAIL_HOME;
+}
+
 /**
  * Gmail thread URL (spec §32). Prefer authuser + all-mail hash; search is the fallback.
  */
@@ -5,7 +16,7 @@ export function gmailThreadUrl(gmailEmail: string, gmailThreadId: string): strin
   const email = gmailEmail.trim();
   const threadId = gmailThreadId.trim();
   if (!email || !threadId) {
-    return "https://mail.google.com/mail/";
+    return GMAIL_HOME;
   }
   const params = new URLSearchParams({ authuser: email });
   return `https://mail.google.com/mail/?${params.toString()}#all/${encodeURIComponent(threadId)}`;

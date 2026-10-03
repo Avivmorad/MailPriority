@@ -13,3 +13,12 @@ export const ONBOARDING_CONFIGURE_DESCRIPTION =
 
 export const BEST_EFFORT_DAILY_NOTE =
   "Daily scans are best-effort and are not run at a saved local time.";
+
+export const TRIAGE_CARD_DESCRIPTION =
+  "VIP and ignore lists change classification when you save and apply them. Custom instructions are trusted settings, never taken from email content.";
+
+export const TRIAGE_SETTINGS_SAVED_MESSAGE =
+  "Triage settings saved. Use Update Now to re-apply them to recent mail, or wait for the next scan.";
+
+export const TRIAGE_UPDATE_STARTED_MESSAGE =
+  "Settings saved. Applying triage rules to mail from the last week. Progress appears on the Scan tab.";

@@ -16,7 +16,12 @@ export function LabeledField({
   valueClassName?: string;
 }) {
   return (
-    <p className={cn("text-sm leading-relaxed", className)}>
+    <p
+      className={cn(
+        "min-w-0 text-sm leading-relaxed [overflow-wrap:anywhere] break-words",
+        className,
+      )}
+    >
       <span className="text-muted-foreground">{label}: </span>
       <span className={cn("text-foreground", valueClassName)} dir={dir}>
         {children}

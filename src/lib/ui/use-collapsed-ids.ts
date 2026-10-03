@@ -36,14 +36,17 @@ function readRaw(key: string): string {
   return window.localStorage.getItem(key) ?? "";
 }
 
-export function useCollapsedIds(storageKey: string): [string[], (next: string[]) => void] {
+export function useCollapsedIds(
+  storageKey: string,
+  options?: { defaultIds?: readonly string[] },
+): [string[], (next: string[]) => void] {
   const key = collapsedStorageKey(storageKey);
   const raw = useSyncExternalStore(
     (onChange) => subscribeKey(key, onChange),
     () => readRaw(key),
     () => "",
   );
-  const collapsed = parseCollapsedIds(raw || null);
+  const collapsed = raw ? parseCollapsedIds(raw) : [...(options?.defaultIds ?? [])];
   const setCollapsed = useCallback(
     (next: string[]) => {
       window.localStorage.setItem(key, serializeCollapsedIds(next));

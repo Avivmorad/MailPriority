@@ -1,7 +1,41 @@
+import type { ReactNode } from "react";
+
 import { DisconnectGmailButton } from "@/components/gmail/disconnect-gmail-button";
+import { SettingInfo } from "@/components/settings/setting-info";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { GmailStatusPayload } from "@/lib/gmail/constants";
+import {
+  CONNECT_GMAIL_INFO,
+  CONNECT_GMAIL_LABEL,
+  DISCONNECT_GMAIL_INFO,
+  DISCONNECT_GMAIL_LABEL,
+  RECONNECT_GMAIL_INFO,
+  RECONNECT_GMAIL_LABEL,
+  RECONNECT_LABEL,
+} from "@/lib/settings/setting-info-copy";
+
+function ControlWithInfo({
+  showInfo,
+  label,
+  description,
+  children,
+}: {
+  showInfo: boolean;
+  label: string;
+  description: string;
+  children: ReactNode;
+}) {
+  if (!showInfo) {
+    return children;
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      {children}
+      <SettingInfo label={label} description={description} />
+    </span>
+  );
+}
 
 function flashMessage(
   gmail: string | undefined,
@@ -14,7 +48,7 @@ function flashMessage(
     return { kind: "ok", text: "Gmail connected. MailPriority labels are ready in your mailbox." };
   }
   if (gmail === "disconnected") {
-    return { kind: "ok", text: "Gmail disconnected. Historical summaries were kept." };
+    return { kind: "ok", text: "Gmail disconnected. Stored mail was removed from MailPriority." };
   }
   if (gmail !== "error") {
     return null;
@@ -98,11 +132,14 @@ export function GmailConnectionCard({
   gmailFlash,
   reason,
   returnTo = "/settings",
+  withSettingInfo = false,
 }: {
   status: GmailStatusPayload;
   gmailFlash?: string;
   reason?: string;
   returnTo?: string;
+  /** Settings-only info icons. Other pages keep the actions unlabeled. */
+  withSettingInfo?: boolean;
 }) {
   const connectHref = `/api/gmail/connect?returnTo=${encodeURIComponent(returnTo)}`;
   const copy = statusCopy(status);
@@ -129,25 +166,51 @@ export function GmailConnectionCard({
           </p>
         ) : null}
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {canConnect && !isActive ? (
-            <a href={connectHref} className={buttonVariants()}>
-              {needsReconnect ? "Reconnect Gmail" : "Connect Gmail"}
-            </a>
+            <ControlWithInfo
+              showInfo={withSettingInfo}
+              label={needsReconnect ? RECONNECT_GMAIL_LABEL : CONNECT_GMAIL_LABEL}
+              description={needsReconnect ? RECONNECT_GMAIL_INFO : CONNECT_GMAIL_INFO}
+            >
+              <a href={connectHref} className={buttonVariants()}>
+                {needsReconnect ? RECONNECT_GMAIL_LABEL : CONNECT_GMAIL_LABEL}
+              </a>
+            </ControlWithInfo>
           ) : null}
 
           {canConnect && isActive ? (
-            <a href={connectHref} className={buttonVariants({ variant: "outline" })}>
-              Reconnect
-            </a>
+            <ControlWithInfo
+              showInfo={withSettingInfo}
+              label={RECONNECT_LABEL}
+              description={RECONNECT_GMAIL_INFO}
+            >
+              <a href={connectHref} className={buttonVariants({ variant: "outline" })}>
+                {RECONNECT_LABEL}
+              </a>
+            </ControlWithInfo>
           ) : null}
 
-          {canConnect && canDisconnect ? <DisconnectGmailButton returnTo={returnTo} /> : null}
+          {canConnect && canDisconnect ? (
+            <ControlWithInfo
+              showInfo={withSettingInfo}
+              label={DISCONNECT_GMAIL_LABEL}
+              description={DISCONNECT_GMAIL_INFO}
+            >
+              <DisconnectGmailButton returnTo={returnTo} />
+            </ControlWithInfo>
+          ) : null}
 
           {!canConnect ? (
-            <Button type="button" disabled>
-              Connect Gmail
-            </Button>
+            <ControlWithInfo
+              showInfo={withSettingInfo}
+              label={CONNECT_GMAIL_LABEL}
+              description={CONNECT_GMAIL_INFO}
+            >
+              <Button type="button" disabled>
+                {CONNECT_GMAIL_LABEL}
+              </Button>
+            </ControlWithInfo>
           ) : null}
         </div>
       </CardContent>

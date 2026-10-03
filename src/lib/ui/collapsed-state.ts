@@ -1,4 +1,4 @@
-const STORAGE_PREFIX = "mailpilot.collapsed.";
+const STORAGE_PREFIX = "mailpilot.collapsed.v2.";
 
 export function collapsedStorageKey(id: string): string {
   return `${STORAGE_PREFIX}${id}`;

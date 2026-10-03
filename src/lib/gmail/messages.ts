@@ -75,6 +75,35 @@ export async function fetchAndParseMessage(
   return parseGmailMessage(res.data);
 }
 
+/** Latest message id and label ids. Skips message bodies (`format=metadata`). */
+export async function fetchThreadMetadata(
+  gmail: gmail_v1.Gmail,
+  threadId: string,
+  budget: GmailRequestBudget = {},
+): Promise<{ latestMessageId: string; labelIds: string[] } | null> {
+  const res = await withGmailRetry(
+    (options) =>
+      gmail.users.threads.get(
+        {
+          userId: "me",
+          id: threadId,
+          format: "metadata",
+          metadataHeaders: ["Subject"],
+        },
+        options,
+      ),
+    { ...budget, units: GMAIL_UNITS.threadsGet },
+  );
+  const messages = [...(res.data.messages ?? [])].sort(
+    (a, b) => Number(a.internalDate ?? 0) - Number(b.internalDate ?? 0),
+  );
+  const latest = messages[messages.length - 1];
+  if (!latest?.id) {
+    return null;
+  }
+  return { latestMessageId: latest.id, labelIds: latest.labelIds ?? [] };
+}
+
 export async function fetchAndParseThread(
   gmail: gmail_v1.Gmail,
   threadId: string,

@@ -1,11 +1,11 @@
 /**
  * Deterministic timing model for large mail scans.
  *
- * A ~700-thread first lookback is dominated by sequential (fetch → AI → persist →
- * label) work inside each worker, overlapped only up to `AI_MAX_CONCURRENCY`.
- * Waves do not prefetch the next durable batch before the checkpoint (crash-safe
- * cursor). Within a wave, fetch → AI → persist → label stays sequential on each
- * worker and overlaps across workers up to `AI_MAX_CONCURRENCY`.
+ * A ~700-thread first lookback is dominated by sequential (fetch → AI → persist)
+ * work inside each worker, overlapped up to `AI_MAX_CONCURRENCY`, then one
+ * parallel label phase and a checkpoint. With more than one worker, the next
+ * wave's Gmail fetch starts during AI. The eval clock still advances the
+ * lockstep estimate below so a faster overlap does not change the assertion.
  * Stored-thread reuse checks are one `getThreadsByGmailIds` read per wave.
  * Per-thread `getScanStatus` was not removed from the post-persist guard; the
  * admission check is once per wave. Further coalescing of those reads is a

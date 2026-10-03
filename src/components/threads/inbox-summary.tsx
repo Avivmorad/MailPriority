@@ -1,16 +1,13 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
 
 import { EmptyState } from "@/components/layout/empty-state";
 import { CollapsibleTopicGroups } from "@/components/layout/collapsible-topic-groups";
-import { ThreadPlacementCorrection } from "@/components/threads/thread-placement-correction";
-import { ThreadTags } from "@/components/ui/thread-tags";
+import { MailListCard } from "@/components/mail/mail-list-card";
 import { groupByTopic } from "@/lib/actions/topics";
 import { threadPlacementReason } from "@/lib/mail/placement";
 import { mailBucketForThread } from "@/lib/mail/buckets";
-import type { RecentThreadRow } from "@/lib/threads/queries";
-import { displayThreadTitle, usableDisplayText } from "@/lib/ui/display-text";
-import { formatRelativeTime } from "@/lib/ui/format";
+import type { RecentThreadRow } from "@/lib/threads/recent-thread";
+import { displayThreadTitle } from "@/lib/ui/display-text";
 
 export function InboxSummary({
   threads,
@@ -18,12 +15,14 @@ export function InboxSummary({
   emptyTitle = "No classified mail yet",
   emptyDescription = "Run a scan to see useful updates. Receipts, OTPs, and marketing are in Ignored.",
   emptyAction,
+  categoryHrefFor,
 }: {
   threads: RecentThreadRow[];
   storageKey?: string;
   emptyTitle?: string;
   emptyDescription?: string;
   emptyAction?: ReactNode;
+  categoryHrefFor?: (thread: RecentThreadRow) => string;
 }) {
   if (threads.length === 0) {
     return <EmptyState title={emptyTitle} description={emptyDescription} action={emptyAction} />;
@@ -37,60 +36,39 @@ export function InboxSummary({
         topic: group.topic,
         count: group.items.length,
         body: (
-          <ul className="divide-y">
+          <div className="space-y-3 p-3">
             {group.items.map((thread) => {
               const tab = mailBucketForThread({ status: thread.status });
+              const title = displayThreadTitle(
+                thread.shortDisplayTitle,
+                thread.summary,
+                thread.subject,
+              );
               return (
-                <li key={thread.id} className="px-4 py-3">
-                  <Link
-                    href={`/thread/${thread.id}`}
-                    className="hover:bg-muted/50 -mx-4 -mt-3 block px-4 pt-3 transition-colors"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <p
-                        className="text-foreground min-w-0 flex-1 leading-snug font-semibold tracking-tight break-words"
-                        dir="auto"
-                        title={displayThreadTitle(
-                          thread.shortDisplayTitle,
-                          thread.summary,
-                          thread.subject,
-                        )}
-                      >
-                        {displayThreadTitle(
-                          thread.shortDisplayTitle,
-                          thread.summary,
-                          thread.subject,
-                        )}
-                      </p>
-                      <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
-                        <ThreadTags
-                          category={thread.category}
-                          status={thread.status}
-                          importance={thread.importance}
-                        />
-                        <span className="text-muted-foreground text-xs">
-                          {formatRelativeTime(thread.latestMessageAt)}
-                        </span>
-                      </div>
-                    </div>
-                    {usableDisplayText(thread.summary) &&
-                    usableDisplayText(thread.shortDisplayTitle) ? (
-                      <p
-                        className="text-muted-foreground mt-1 line-clamp-2 text-sm leading-relaxed"
-                        dir="auto"
-                      >
-                        {usableDisplayText(thread.summary)}
-                      </p>
-                    ) : null}
-                  </Link>
-                  <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
-                    {threadPlacementReason({ tab })}
-                  </p>
-                  <ThreadPlacementCorrection threadId={thread.id} tab={tab} />
-                </li>
+                <MailListCard
+                  key={thread.id}
+                  threadId={thread.id}
+                  title={title}
+                  sender={thread.sender}
+                  latestMessageAt={thread.latestMessageAt}
+                  gmailUrl={thread.gmailUrl}
+                  category={thread.category}
+                  importance={thread.importance}
+                  urgency={thread.urgency}
+                  deadline={thread.deadline}
+                  categoryHref={categoryHrefFor?.(thread)}
+                  whyText={threadPlacementReason({
+                    tab,
+                    importanceReason: thread.importanceReason,
+                    summary: thread.summary,
+                    title,
+                    category: thread.category,
+                    sender: thread.sender,
+                  })}
+                />
               );
             })}
-          </ul>
+          </div>
         ),
       }))}
     />
