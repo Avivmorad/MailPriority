@@ -322,12 +322,13 @@ describe("InitialScanCard polling", () => {
     expect(stats.className).toContain("minmax(10rem,1fr)");
     expect(stats.className).not.toContain("grid-cols-2");
     expect(stats.className).not.toContain("sm:grid-cols-3");
-    for (const label of ["Conversations", "Emails scanned", "Updated"]) {
+    for (const label of ["Scanning", "Conversations", "Emails scanned", "Updated"]) {
       const dt = screen.getByText(label);
       expect(dt.tagName).toBe("DT");
       expect(dt.className).toContain("whitespace-nowrap");
       expect(dt.className).not.toContain("break-words");
     }
+    expect(screen.getByText(/\d{1,2} [A-Z]{3} - \d{1,2} [A-Z]{3}/)).toBeInTheDocument();
   });
 
   it("names the lookback control and scan actions", () => {

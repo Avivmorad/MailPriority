@@ -7,6 +7,8 @@ import { IMPORTANCE_VALUES, type Importance } from "@/lib/ai/schemas";
 import {
   MAIL_SIGNAL_VALUES,
   parseCategoryFilter,
+  parsePriorityFilter,
+  parseSignalFilter,
   signalKind,
   type MailSignal,
 } from "@/lib/mail/filters";
@@ -16,7 +18,7 @@ import {
   filterChipIdleClass,
   interactiveChipClass,
 } from "@/lib/ui/interactive";
-import { labelForImportance } from "@/lib/ui/labels";
+import { labelForImportance, labelForUrgency } from "@/lib/ui/labels";
 import { tagLabel, tagMarkerClass, type TagKind } from "@/lib/ui/tags";
 import { cn } from "@/lib/utils";
 
@@ -40,9 +42,13 @@ export function MailRefineFilters({
   onSelect?: (href: string) => void;
 }) {
   const categoryLabelId = useId();
+  const priorityLabelId = useId();
+  const urgencyLabelId = useId();
   const signalOptions = MAIL_SIGNAL_VALUES.filter(
     (value) => value === signal || signals.includes(value),
   );
+  const urgencyOptions = signalOptions.filter((value) => signalKind(value) === "urgency");
+  const otherSignals = signalOptions.filter((value) => signalKind(value) !== "urgency");
   const showCategory = categoryOptions.length > 0 || category !== null;
 
   function hrefFor(next: {
@@ -69,44 +75,56 @@ export function MailRefineFilters({
 
   return (
     <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2">
-      <div className="flex items-center gap-1.5">
-        <span className="text-muted-foreground pe-0.5 text-xs font-medium">Priority</span>
-        <div role="group" aria-label="Priority" className="flex flex-wrap gap-1">
-          {IMPORTANCE_VALUES.map((value) => {
-            const active = priority === value;
-            const label = labelForImportance(value);
-            return (
-              <a
-                key={value}
-                href={hrefFor({ priority: active ? null : value })}
-                aria-current={active ? "true" : undefined}
-                aria-label={`${label} priority`}
-                onClick={(event) => follow(event, hrefFor({ priority: active ? null : value }))}
-                className={cn(
-                  interactiveChipClass,
-                  "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs",
-                  active ? cn(filterChipActiveClass, "font-semibold") : filterChipIdleClass,
-                )}
-              >
-                <span
-                  aria-hidden
-                  className={cn(
-                    "size-1.5 shrink-0 rounded-full",
-                    tagMarkerClass("importance", value),
-                  )}
-                />
-                {label}
-              </a>
-            );
-          })}
-        </div>
-      </div>
+      <label className="flex items-center gap-1.5">
+        <span id={priorityLabelId} className="text-muted-foreground text-xs font-medium">
+          Priority
+        </span>
+        <select
+          aria-labelledby={priorityLabelId}
+          className="border-input bg-background text-foreground h-8 max-w-56 rounded-lg border px-2 text-xs"
+          value={priority ?? ""}
+          onChange={(event) => {
+            onSelect?.(hrefFor({ priority: parsePriorityFilter(event.target.value) }));
+          }}
+        >
+          <option value="">All priorities</option>
+          {IMPORTANCE_VALUES.map((value) => (
+            <option key={value} value={value}>
+              {labelForImportance(value)}
+            </option>
+          ))}
+        </select>
+      </label>
 
-      {signalOptions.length > 0 ? (
+      {urgencyOptions.length > 0 ? (
+        <label className="flex items-center gap-1.5">
+          <span id={urgencyLabelId} className="text-muted-foreground text-xs font-medium">
+            Urgency
+          </span>
+          <select
+            aria-labelledby={urgencyLabelId}
+            className="border-input bg-background text-foreground h-8 max-w-56 rounded-lg border px-2 text-xs"
+            value={signal && signalKind(signal) === "urgency" ? signal : ""}
+            onChange={(event) => {
+              const next = parseSignalFilter(event.target.value);
+              onSelect?.(hrefFor({ signal: next && signalKind(next) === "urgency" ? next : null }));
+            }}
+          >
+            <option value="">All urgencies</option>
+            {urgencyOptions.map((value) => (
+              <option key={value} value={value}>
+                {labelForUrgency(value)}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
+
+      {otherSignals.length > 0 ? (
         <div className="flex min-w-0 items-center gap-1.5">
           <span className="text-muted-foreground pe-0.5 text-xs font-medium">Signal</span>
           <div role="group" aria-label="Signal" className="flex flex-wrap gap-1">
-            {signalOptions.map((value) => {
+            {otherSignals.map((value) => {
               const active = signal === value;
               const kind = signalTagKind(value);
               const label = tagLabel(kind, value);

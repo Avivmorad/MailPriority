@@ -38,12 +38,21 @@ describe("MailRefineFilters", () => {
     expect(
       screen.queryByRole("link", { name: /Official, Legal & Insurance/ }),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "Priority" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Medium priority" })).toHaveTextContent("Medium");
+    const priority = screen.getByRole("combobox", { name: "Priority" });
+    expect([...priority.querySelectorAll("option")].map((option) => option.textContent)).toEqual([
+      "All priorities",
+      "High",
+      "Medium",
+      "Low",
+    ]);
+    const urgency = screen.getByRole("combobox", { name: "Urgency" });
+    expect([...urgency.querySelectorAll("option")].map((option) => option.textContent)).toEqual([
+      "All urgencies",
+      "Medium",
+    ]);
+    expect(screen.queryByRole("link", { name: "Urgency: Medium" })).not.toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Signal" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Urgency: Medium" }).className).not.toContain(
-      "w-[7.25rem]",
-    );
+    expect(screen.getByRole("link", { name: "Pay" })).toBeInTheDocument();
   });
 
   it("clears an active category from the menu and keeps the tab", () => {
@@ -67,9 +76,7 @@ describe("MailRefineFilters", () => {
       (option) => option.textContent === "Career",
     );
     expect(career).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Medium priority" })).toHaveAttribute(
-      "href",
-      "/mail?tab=waiting&category=finance",
-    );
+    const priority = screen.getByRole("combobox", { name: "Priority" });
+    expect(priority).toHaveValue("medium");
   });
 });
