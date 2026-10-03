@@ -21,13 +21,6 @@ const DESTINATIONS = [
 
 type DestinationId = (typeof DESTINATIONS)[number]["id"];
 
-const GMAIL_HOME = "https://mail.google.com/mail/";
-
-export function mailGmailHref(gmailUrl: string | null | undefined): string {
-  const trimmed = gmailUrl?.trim();
-  return trimmed ? trimmed : GMAIL_HOME;
-}
-
 export function MailMoveMenu({
   openHref,
   gmailHref,

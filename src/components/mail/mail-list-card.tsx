@@ -1,7 +1,8 @@
 import { MailCardTitle } from "@/components/mail/mail-card-chrome";
-import { mailGmailHref, MailMoveMenu } from "@/components/mail/mail-move-menu";
+import { MailMoveMenu } from "@/components/mail/mail-move-menu";
 import { LabeledField } from "@/components/ui/labeled-field";
 import { ThreadTags } from "@/components/ui/thread-tags";
+import { mailGmailHref } from "@/lib/gmail/deep-link";
 import { displayUrgencyForDeadline, formatRelativeTime } from "@/lib/ui/format";
 import { accentForUrgency } from "@/lib/ui/labels";
 import { cn } from "@/lib/utils";
