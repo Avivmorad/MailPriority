@@ -35,11 +35,11 @@ deeper fill of the same hue.
 A quieter row under the tabs can narrow the same list. Combining a tab with any
 of these is an AND. **Clear filters** drops them and leaves the tab in place.
 
-| Control      | What it filters                                                                                                                   | Query              |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
-| **Priority** | High, Medium, or Low. Medium means medium priority.                                                                               | `priority=medium`  |
-| **Signal**   | Closed-set chips on the rows in this tab, other than the six tabs and priority. Examples: Urgency Level High, Pay, Reply, Ignore. | `signal=high`      |
-| **Category** | One menu of categories present in this tab. Not a card per category.                                                              | `category=finance` |
+| Control      | What it filters                                                                                                              | Query              |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| **Priority** | High, Medium, or Low. Medium means medium priority.                                                                          | `priority=medium`  |
+| **Signal**   | Closed-set chips on the rows in this tab, other than the six tabs and priority. Examples: Urgency: High, Pay, Reply, Ignore. | `signal=high`      |
+| **Category** | One menu of categories present in this tab. Not a card per category.                                                         | `category=finance` |
 
 A category matches the topic group for that thread, including legacy categories
 and security notices. Clicking a category badge sets the same category filter.
@@ -272,7 +272,7 @@ Gmail step. Owner console steps: [`OWNER_TASKS.md`](OWNER_TASKS.md).
 
 ## Urgency indicators
 
-Every email displays **Urgency Level: High, Medium, Low, None, or Unknown**.
+Every email displays **Urgency: High, Medium, Low, None, or Unknown**.
 Email and action rows have matching left markers: red, orange, green, gray,
 and blue respectively. Stored AI values remain compatible: `urgent` maps to
 High, `soon` to Medium, `normal` to Low, and `none` to None. Missing or

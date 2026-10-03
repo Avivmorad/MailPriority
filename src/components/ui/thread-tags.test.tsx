@@ -12,6 +12,6 @@ describe("ThreadTags urgency", () => {
     [null, "Unknown"],
   ])("always shows %s as %s", (urgency, label) => {
     render(<ThreadTags urgency={urgency} />);
-    expect(screen.getByText(`Urgency Level: ${label}`)).toBeInTheDocument();
+    expect(screen.getByText(`Urgency: ${label}`)).toBeInTheDocument();
   });
 });

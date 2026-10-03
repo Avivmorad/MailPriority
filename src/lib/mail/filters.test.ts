@@ -134,7 +134,7 @@ describe("mail filters", () => {
     expect(filterBySignal(items, "unknown").map((item) => item.id)).toEqual(["missing"]);
     expect(signalsPresent(items)).toEqual(["high", "low", "none", "unknown"]);
     expect(mailRefinementPhrase({ priority: null, category: null, signal: "high" })).toBe(
-      "Urgency Level: High",
+      "Urgency: High",
     );
   });
 
