@@ -5,7 +5,14 @@ import { useId, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
 import { Badge } from "@/components/ui/badge";
-import { isVisibleTag, tagClassName, tagHint, tagLabel, type TagKind } from "@/lib/ui/tags";
+import {
+  isVisibleTag,
+  tagClassName,
+  tagHint,
+  tagLabel,
+  tagMarkerClass,
+  type TagKind,
+} from "@/lib/ui/tags";
 import { cn } from "@/lib/utils";
 
 function HoverHint({ hint, children }: { hint: string; children: ReactNode }) {
@@ -62,6 +69,7 @@ export function MetaBadge({
 
   const label = tagLabel(kind, value);
   const hint = tagHint(kind, value);
+  const marker = tagMarkerClass(kind, value);
   const badge = (
     <Badge
       variant="secondary"
@@ -69,6 +77,9 @@ export function MetaBadge({
       aria-label={!href && hint ? `${label}. ${hint}` : undefined}
       className={cn(tagClassName(kind, value), hint && !href && "cursor-help")}
     >
+      {marker ? (
+        <span aria-hidden className={cn("size-1.5 shrink-0 rounded-full", marker)} />
+      ) : null}
       {label}
     </Badge>
   );

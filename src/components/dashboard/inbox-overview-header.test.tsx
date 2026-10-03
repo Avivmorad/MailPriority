@@ -41,7 +41,7 @@ describe("InboxOverviewHeader", () => {
     expect(button.className).toContain("text-lg");
     expect(button.className).not.toContain("text-sm");
     expect(button.className).toContain("shadow-none");
-    expect(button.className).toContain("bg-[oklch(0.38_0.09_260)]");
+    expect(button.className).toContain("bg-primary");
     expect(button.className).not.toMatch(/shadow-(xs|sm|md|lg|xl|2xl)/);
     expect(button.className).not.toMatch(/drop-shadow/);
   });

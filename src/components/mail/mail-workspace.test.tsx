@@ -134,12 +134,12 @@ describe("MailWorkspace filters", () => {
   it("colors the main filter cards and keeps category as one menu", () => {
     renderMail();
 
-    expect(screen.getByRole("link", { name: /For You/ }).className).toContain("bg-sky-");
-    expect(screen.getByRole("link", { name: /Actions/ }).className).toContain("bg-red-");
-    expect(screen.getByRole("link", { name: /Pending/ }).className).toContain("bg-amber-");
-    expect(screen.getByRole("link", { name: /Closed/ }).className).toContain("bg-green-");
-    expect(screen.getByRole("link", { name: /Snoozed/ }).className).toContain("bg-indigo-");
-    expect(screen.getByRole("link", { name: /Ignored/ }).className).toContain("bg-zinc-");
+    expect(screen.getByRole("link", { name: /Actions/ }).className).toContain("bg-accent");
+    for (const name of [/For You/, /Pending/, /Closed/, /Snoozed/, /Ignored/]) {
+      const className = screen.getByRole("link", { name }).className;
+      expect(className).toContain("bg-muted");
+      expect(className).not.toMatch(/bg-(sky|red|amber|green|indigo|zinc)-/);
+    }
 
     const cards = screen
       .getAllByRole("link")

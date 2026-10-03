@@ -5,8 +5,8 @@ import type { AppBanner } from "@/lib/ui/status-banner";
 import { cn } from "@/lib/utils";
 
 const KIND_CLASS: Record<AppBanner["kind"], string> = {
-  info: "border-primary/25 bg-primary/8 text-foreground",
-  warning: "border-orange-500/30 bg-orange-500/10 text-foreground",
+  info: "border-ring/40 bg-accent text-foreground",
+  warning: "border-urgency-medium/40 bg-state-actions text-foreground",
   error: "border-destructive/30 bg-destructive/10 text-foreground",
 };
 

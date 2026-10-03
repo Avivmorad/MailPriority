@@ -12,12 +12,12 @@ const buttonVariants = cva(
         outline:
           "ui-interactive border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
-          "ui-interactive bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_6%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+          "ui-interactive bg-secondary text-secondary-foreground hover:bg-[color-mix(in_srgb,var(--secondary),var(--foreground)_6%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
         ghost:
           "ui-interactive hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
         destructive:
           "ui-interactive bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
-        navy: "ui-interactive bg-[oklch(0.38_0.09_260)] text-[oklch(0.985_0.004_85)] shadow-none hover:bg-[oklch(0.32_0.09_260)] dark:bg-[oklch(0.48_0.12_260)] dark:text-[oklch(0.985_0.004_85)] dark:hover:bg-[oklch(0.54_0.12_260)]",
+        navy: "ui-interactive bg-primary text-primary-foreground shadow-none hover:bg-primary/90",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {

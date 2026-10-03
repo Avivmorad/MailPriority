@@ -30,13 +30,9 @@ export function MailCardTitle({
   );
 }
 
-/** Navy fill for the in-app Open action. Shadow comes from `.ui-interactive`. */
-const mailCardPrimaryClass =
-  "bg-[oklch(0.38_0.09_260)] text-[oklch(0.985_0.004_85)] hover:bg-[oklch(0.32_0.09_260)] dark:bg-[oklch(0.48_0.12_260)] dark:text-[oklch(0.985_0.004_85)] dark:hover:bg-[oklch(0.54_0.12_260)]";
-
 export function MailOpenLink({ href }: { href: string }) {
   return (
-    <Link href={href} className={cn(buttonVariants(), mailCardPrimaryClass)}>
+    <Link href={href} className={buttonVariants()}>
       Open
     </Link>
   );

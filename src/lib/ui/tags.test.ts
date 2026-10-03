@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { tagColorClasses, tagHint, tagLabel, isVisibleTag } from "@/lib/ui/tags";
+import { tagClassName, tagHint, tagLabel, tagMarkerClass, isVisibleTag } from "@/lib/ui/tags";
 
 describe("tagLabel", () => {
   it("uses product copy for status and category", () => {
@@ -26,10 +26,33 @@ describe("tagHint", () => {
 });
 
 describe("tagClassName", () => {
-  it("gives each catalogued tag its own color class", () => {
-    const classes = tagColorClasses();
-    expect(classes.length).toBeGreaterThan(20);
-    expect(new Set(classes).size).toBe(classes.length);
+  it("keeps category and action chips neutral", () => {
+    expect(tagClassName("category", "finance")).toBe(tagClassName("action", "pay"));
+    expect(tagClassName("category", "security")).toContain("bg-muted");
+    expect(tagClassName("action", "schedule")).not.toMatch(/fuchsia|purple|red|orange/);
+  });
+
+  it("washes email states without a saturated fill", () => {
+    expect(tagClassName("status", "action_required")).toContain("bg-state-actions");
+    expect(tagClassName("status", "waiting")).toContain("bg-state-pending");
+    expect(tagClassName("status", "informational")).toContain("bg-state-fyi");
+    expect(tagClassName("status", "resolved")).toContain("bg-muted");
+    expect(tagClassName("status", "ignore")).toContain("bg-muted");
+  });
+
+  it("maps urgency and importance onto the five shared marker tokens", () => {
+    expect(tagMarkerClass("urgency", "urgent")).toBe("bg-urgency-high");
+    expect(tagMarkerClass("urgency", "expired")).toBe("bg-urgency-high");
+    expect(tagMarkerClass("urgency", "soon")).toBe("bg-urgency-medium");
+    expect(tagMarkerClass("importance", "medium")).toBe("bg-urgency-medium");
+    expect(tagMarkerClass("urgency", "normal")).toBe("bg-urgency-low");
+    expect(tagMarkerClass("urgency", "later")).toBe("bg-urgency-low");
+    expect(tagMarkerClass("urgency", "none")).toBe("bg-urgency-none");
+    expect(tagMarkerClass("urgency", "not-a-level")).toBe("bg-urgency-unknown");
+    expect(tagMarkerClass("category", "finance")).toBe("bg-urgency-unknown");
+    expect(tagMarkerClass("action", "pay")).toBeNull();
+    expect(tagClassName("urgency", "urgent")).toContain("bg-muted");
+    expect(tagClassName("importance", "high")).toContain("bg-muted");
   });
 });
 

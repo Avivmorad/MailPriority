@@ -150,7 +150,7 @@ export default function LayoutLabPage() {
 
       <section className="min-w-0 space-y-3">
         <h2 className="text-foreground text-lg font-semibold tracking-tight">Actions</h2>
-        <article className="bg-card ring-foreground/10 min-w-0 overflow-hidden rounded-xl border-l-4 border-l-orange-500 p-4 shadow-xs ring-1 sm:p-5">
+        <article className="bg-card ring-foreground/10 border-l-urgency-medium min-w-0 overflow-hidden rounded-xl border-l-4 p-4 shadow-xs ring-1 sm:p-5">
           <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0 flex-1 overflow-hidden">
               <h3

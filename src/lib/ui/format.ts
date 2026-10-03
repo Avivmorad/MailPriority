@@ -162,11 +162,11 @@ export function classForDeadline(
 ): string {
   switch (deadlineProximity(isoDate, now)) {
     case "expired":
-      return "font-semibold text-red-600 dark:text-red-400";
+      return "font-semibold text-urgency-high";
     case "soon":
-      return "font-semibold text-orange-600 dark:text-orange-400";
+      return "font-semibold text-urgency-medium";
     case "later":
-      return "font-semibold text-sky-600 dark:text-sky-300";
+      return "font-semibold text-urgency-low";
     default:
       return "";
   }

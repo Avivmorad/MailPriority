@@ -149,7 +149,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
             ) : null}
           </div>
           {lowConfidence ? (
-            <p className="text-sm text-amber-800 dark:text-amber-200">
+            <p className="text-urgency-medium text-sm">
               Low classification confidence ({thread.confidence?.toFixed(2)}). Double-check before
               acting.
             </p>
