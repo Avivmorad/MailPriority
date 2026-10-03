@@ -85,9 +85,7 @@ export function MailListCard({
           showStatus={false}
           categoryHref={categoryHref}
         />
-        {uncertain ? (
-          <p className="mt-1 text-xs text-amber-800 dark:text-amber-200">Uncertain</p>
-        ) : null}
+        {uncertain ? <p className="text-urgency-medium mt-1 text-xs">Uncertain</p> : null}
       </div>
       <div className="mt-3 min-w-0 space-y-1 overflow-hidden">
         {doText ? (

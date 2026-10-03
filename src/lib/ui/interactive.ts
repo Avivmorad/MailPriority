@@ -23,6 +23,13 @@ export const interactiveCardClass =
 export const interactiveChipClass =
   "ui-interactive focus-visible:ring-ring cursor-pointer focus-visible:ring-3 focus-visible:outline-none";
 
+/** Unselected filter: neutral fill, shared border, slightly stronger hover. */
+export const filterChipIdleClass =
+  "border-border bg-muted text-foreground hover:bg-[color-mix(in_srgb,var(--muted),var(--foreground)_8%)] aria-disabled:opacity-50";
+
+/** Selected filter: the same blue highlight on every screen. */
+export const filterChipActiveClass = "border-ring bg-accent text-accent-foreground";
+
 /** Sidebar / primary nav link chrome (hover lift on top of active styles). */
 export const interactiveNavClass =
   "ui-interactive focus-visible:ring-ring cursor-pointer focus-visible:ring-3 focus-visible:outline-none active:translate-y-px";

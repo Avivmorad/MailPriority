@@ -70,10 +70,10 @@ describe("deadlineProximity", () => {
     expect(displayUrgencyForDeadline(null, "urgent", jerusalemAfternoon)).toBe("urgent");
   });
 
-  it("colors expired red, soon orange, and later light blue", () => {
-    expect(classForDeadline("2026-09-09", jerusalemAfternoon)).toContain("text-red-600");
-    expect(classForDeadline("2026-09-12", jerusalemAfternoon)).toContain("text-orange-600");
-    expect(classForDeadline("2026-09-20", jerusalemAfternoon)).toContain("text-sky-600");
+  it("colors expired high, soon medium, and later low", () => {
+    expect(classForDeadline("2026-09-09", jerusalemAfternoon)).toContain("text-urgency-high");
+    expect(classForDeadline("2026-09-12", jerusalemAfternoon)).toContain("text-urgency-medium");
+    expect(classForDeadline("2026-09-20", jerusalemAfternoon)).toContain("text-urgency-low");
   });
 });
 

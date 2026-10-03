@@ -33,14 +33,14 @@ describe("humanizeToken", () => {
 
 describe("urgency levels", () => {
   it.each([
-    ["urgent", "high", "red"],
-    ["expired", "high", "red"],
-    ["soon", "medium", "orange"],
-    ["normal", "low", "green"],
-    ["later", "low", "green"],
-    ["none", "none", "gray"],
-    [null, "unknown", "blue"],
-    ["invalid", "unknown", "blue"],
+    ["urgent", "high", "urgency-high"],
+    ["expired", "high", "urgency-high"],
+    ["soon", "medium", "urgency-medium"],
+    ["normal", "low", "urgency-low"],
+    ["later", "low", "urgency-low"],
+    ["none", "none", "urgency-none"],
+    [null, "unknown", "urgency-unknown"],
+    ["invalid", "unknown", "urgency-unknown"],
   ])("maps %s to %s with a %s side marker", (stored, level, color) => {
     expect(urgencyLevel(stored)).toBe(level);
     expect(accentForUrgency(stored)).toContain(`border-l-${color}`);

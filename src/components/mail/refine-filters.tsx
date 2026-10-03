@@ -11,9 +11,13 @@ import {
   type MailSignal,
 } from "@/lib/mail/filters";
 import { mailViewPath, type MailTab } from "@/lib/mail/tabs";
-import { interactiveChipClass } from "@/lib/ui/interactive";
+import {
+  filterChipActiveClass,
+  filterChipIdleClass,
+  interactiveChipClass,
+} from "@/lib/ui/interactive";
 import { labelForImportance } from "@/lib/ui/labels";
-import { tagClassName, tagLabel, type TagKind } from "@/lib/ui/tags";
+import { tagLabel, tagMarkerClass, type TagKind } from "@/lib/ui/tags";
 import { cn } from "@/lib/utils";
 
 export function MailRefineFilters({
@@ -80,11 +84,17 @@ export function MailRefineFilters({
                 onClick={(event) => follow(event, hrefFor({ priority: active ? null : value }))}
                 className={cn(
                   interactiveChipClass,
-                  "inline-flex items-center rounded-full border px-2.5 py-1 text-xs",
-                  tagClassName("importance", value),
-                  active ? "border-current font-semibold" : "border-transparent",
+                  "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs",
+                  active ? cn(filterChipActiveClass, "font-semibold") : filterChipIdleClass,
                 )}
               >
+                <span
+                  aria-hidden
+                  className={cn(
+                    "size-1.5 shrink-0 rounded-full",
+                    tagMarkerClass("importance", value),
+                  )}
+                />
                 {label}
               </a>
             );
@@ -98,7 +108,9 @@ export function MailRefineFilters({
           <div role="group" aria-label="Signal" className="flex flex-wrap gap-1">
             {signalOptions.map((value) => {
               const active = signal === value;
-              const label = tagLabel(signalTagKind(value), value);
+              const kind = signalTagKind(value);
+              const label = tagLabel(kind, value);
+              const marker = tagMarkerClass(kind, value);
               return (
                 <a
                   key={value}
@@ -108,11 +120,13 @@ export function MailRefineFilters({
                   onClick={(event) => follow(event, hrefFor({ signal: active ? null : value }))}
                   className={cn(
                     interactiveChipClass,
-                    "inline-flex items-center rounded-full border px-2.5 py-1 text-xs",
-                    tagClassName(signalTagKind(value), value),
-                    active ? "border-current font-semibold" : "border-transparent",
+                    "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs",
+                    active ? cn(filterChipActiveClass, "font-semibold") : filterChipIdleClass,
                   )}
                 >
+                  {marker ? (
+                    <span aria-hidden className={cn("size-1.5 shrink-0 rounded-full", marker)} />
+                  ) : null}
                   {label}
                 </a>
               );

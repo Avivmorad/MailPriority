@@ -298,7 +298,7 @@ function LoginForm() {
               </p>
             ) : null}
             {notice ? (
-              <p className="text-sm text-emerald-700 dark:text-emerald-400" role="status">
+              <p className="text-urgency-low text-sm" role="status">
                 {notice}
               </p>
             ) : null}

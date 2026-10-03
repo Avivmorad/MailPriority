@@ -100,16 +100,5 @@ export function urgencyLevel(
 }
 
 export function accentForUrgency(value: string | null | undefined): string {
-  switch (urgencyLevel(value)) {
-    case "high":
-      return "border-l-red-500";
-    case "medium":
-      return "border-l-orange-500";
-    case "low":
-      return "border-l-green-500";
-    case "none":
-      return "border-l-gray-400";
-    case "unknown":
-      return "border-l-blue-500";
-  }
+  return `border-l-urgency-${urgencyLevel(value)}`;
 }

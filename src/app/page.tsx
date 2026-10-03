@@ -63,21 +63,21 @@ const features = [
 const heroPreview = [
   {
     tab: "Actions",
-    accent: "border-l-orange-500",
+    accent: "border-l-urgency-medium",
     title: "University registration",
     meta: "Registrar · Due 12 Sep",
     body: "Do: Choose courses and submit registration before the deadline.",
   },
   {
     tab: "Pending",
-    accent: "border-l-sky-500",
+    accent: "border-l-urgency-unknown",
     title: "Question sent to the hotel",
     meta: "Booking.com · Pending on the hotel",
     body: "They confirmed your smart-TV question was forwarded. Nothing for you until they reply.",
   },
   {
     tab: "For You",
-    accent: "border-l-zinc-400",
+    accent: "border-l-urgency-none",
     title: "Weekly product changelog",
     meta: "Linear · For You",
     body: "Shipped: placement reasons, undo, and a change-focused dashboard.",
@@ -88,21 +88,21 @@ const walkthroughSteps = [
   {
     step: "1",
     tab: "Actions",
-    accent: "border-l-orange-500",
+    accent: "border-l-urgency-medium",
     title: "It starts as an Action",
     body: "University registration lands in Actions with a deadline and a clear next step.",
   },
   {
     step: "2",
     tab: "Pending",
-    accent: "border-l-sky-500",
+    accent: "border-l-urgency-unknown",
     title: "After you act, it moves",
     body: "Once you submit or reply, the same thread shifts to Pending — waiting on someone else.",
   },
   {
     step: "3",
     tab: "For You",
-    accent: "border-l-zinc-400",
+    accent: "border-l-urgency-none",
     title: "Useful mail stays separate",
     body: "Changelogs and FYIs land in For You. They never compete with work that still needs you.",
   },
@@ -264,7 +264,7 @@ export default function Home() {
             {questions.map(({ icon: Icon, title, body }) => (
               <Card key={title}>
                 <CardHeader>
-                  <div className="bg-primary/10 text-primary mb-2 flex size-10 items-center justify-center rounded-lg">
+                  <div className="bg-accent text-primary mb-2 flex size-10 items-center justify-center rounded-lg">
                     <Icon className="size-5" aria-hidden />
                   </div>
                   <CardTitle>{title}</CardTitle>
@@ -286,7 +286,7 @@ export default function Home() {
             {features.map(({ icon: Icon, title, body }) => (
               <Card key={title}>
                 <CardHeader>
-                  <div className="bg-primary/10 text-primary mb-2 flex size-10 items-center justify-center rounded-lg">
+                  <div className="bg-accent text-primary mb-2 flex size-10 items-center justify-center rounded-lg">
                     <Icon className="size-5" aria-hidden />
                   </div>
                   <CardTitle className="text-base">{title}</CardTitle>
