@@ -154,13 +154,15 @@ describe("MailWorkspace filters", () => {
       "Career",
       "Travel & Transport",
     ]);
-    expect(screen.getByRole("group", { name: "Priority" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Priority" })).toBeInTheDocument();
   });
 
   it("shows only medium-priority mail when Medium is selected, then restores the list", () => {
     renderMail();
 
-    fireEvent.click(screen.getByRole("link", { name: "Medium priority" }));
+    fireEvent.change(screen.getByRole("combobox", { name: "Priority" }), {
+      target: { value: "medium" },
+    });
     expand(/Finance/);
     expect(screen.getByText("Pay the studio invoice")).toBeInTheDocument();
     expect(screen.queryByText("Reply about the hotel")).not.toBeInTheDocument();

@@ -113,6 +113,7 @@ export default function LayoutLabPage() {
               className="grid min-w-0 grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-x-5 gap-y-3"
             >
               {[
+                ["Scanning", "3 OCT - 3 NOV"],
                 ["Conversations", "310 of 504"],
                 ["Emails scanned", "842"],
                 ["Actions", "12"],

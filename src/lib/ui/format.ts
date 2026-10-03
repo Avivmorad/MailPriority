@@ -59,6 +59,14 @@ export function formatDateTime(iso: string | null | undefined): string {
   return `${day} ${month}, ${hour}:${minute}`;
 }
 
+/** Inclusive lookback as `3 OCT - 3 NOV`, in the display timezone. */
+export function formatScanWindow(lookbackDays: number, now: Date = new Date()): string {
+  const end = addCalendarDaysIso(0, now);
+  const start = addCalendarDaysIso(-lookbackDays, now);
+  const day = (isoDate: string) => formatDate(isoDate).toUpperCase();
+  return `${day(start)} - ${day(end)}`;
+}
+
 export function formatDate(isoDate: string | null | undefined): string {
   if (!isoDate) {
     return "—";

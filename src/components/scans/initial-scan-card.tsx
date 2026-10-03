@@ -29,7 +29,7 @@ import {
 import { DISPATCH_LEASE_SECONDS } from "@/lib/scans/dispatch-budget";
 import { scanUserMessage } from "@/lib/scans/errors";
 import { BEST_EFFORT_DAILY_NOTE } from "@/lib/settings/schedule-copy";
-import { formatDateTime } from "@/lib/ui/format";
+import { formatDateTime, formatScanWindow } from "@/lib/ui/format";
 import { labelForScanStatus } from "@/lib/ui/labels";
 
 function formatCount(value: number | null): string {
@@ -643,6 +643,7 @@ export function InitialScanCard({
   const statusLabel = lastRunStatus ? labelForScanStatus(lastRunStatus) : null;
   const updatedAt = progress?.updated_at ?? lastRunAt ?? null;
   const factItems = [
+    { label: "Scanning", value: formatScanWindow(lookbackDays) },
     {
       label: "Conversations",
       value: `${bar.threadsChecked} of ${bar.threadsDiscovered}`,
