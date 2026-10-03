@@ -147,27 +147,32 @@ export function TriagePreferencesForm({
         <CardDescription>{TRIAGE_CARD_DESCRIPTION}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <TriageListField
-          label={VIP_SENDERS_LABEL}
-          info={VIP_SENDERS_INFO}
-          values={vip}
-          onChange={setVip}
-          parseValue={parseTriageSender}
-          placeholder="vip@example.com"
-          invalidMessage="Enter a valid email address."
-          disabled={disabled}
-          inputMode="email"
-        />
-        <IgnoreSendersDomainsField
-          senders={ignored}
-          domains={domains}
-          info={IGNORE_SENDERS_DOMAINS_INFO}
-          disabled={disabled}
-          onChange={({ senders, domains: nextDomains }) => {
-            setIgnored(senders);
-            setDomains(nextDomains);
-          }}
-        />
+        <div
+          data-testid="triage-sender-editors"
+          className="grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))] items-start gap-4"
+        >
+          <TriageListField
+            label={VIP_SENDERS_LABEL}
+            info={VIP_SENDERS_INFO}
+            values={vip}
+            onChange={setVip}
+            parseValue={parseTriageSender}
+            placeholder="vip@example.com"
+            invalidMessage="Enter a valid email address."
+            disabled={disabled}
+            inputMode="email"
+          />
+          <IgnoreSendersDomainsField
+            senders={ignored}
+            domains={domains}
+            info={IGNORE_SENDERS_DOMAINS_INFO}
+            disabled={disabled}
+            onChange={({ senders, domains: nextDomains }) => {
+              setIgnored(senders);
+              setDomains(nextDomains);
+            }}
+          />
+        </div>
         <div className="block text-sm">
           <SettingLabel
             label={CUSTOM_TRIAGE_INSTRUCTIONS_LABEL}
